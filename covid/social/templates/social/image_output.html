@@ -1,0 +1,30 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+{% if number == 0 %}
+<div class="container text-center px-3 py-3 pt-md-5 pb-md-4 mx-auto">
+    <h1 class="display-4 text-center py-3">COVID-19 Care - Face Mask Detector</h1>
+    <h2 class="text-success">Keep it up!! You are following social distancing</h2>
+    <h4 class="text-success">You are now safe from the rampant Coronavirus!</h4>
+    <br><img src="{{image}}" height="400" width="700">
+    <br><br>
+    <div class="container">
+        <br><a href="{{image}}" class="btn btn-primary" download>Download Results</a>
+    </div>
+</div>
+
+
+{% else %}
+
+<div class="container text-center px-3 py-3 pt-md-5 pb-md-4 mx-auto">
+    <h1 class="display-4 text-center py-3">COVID-19 Care - Face Mask Detector</h1>
+    <h2 class="text-danger">Oh no!! You are not following social distancing</h2>
+    <h4 class="text-danger">Please follow social distancing in public places to keep yourself and others safe from the rampant Coronavirus!</h4>
+    <br><img src="{{image}}" height="400" width="700">
+    <br><br>
+    <div class="container">
+        <br><a href="{{image}}" class="btn btn-primary" download>Download Results</a>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

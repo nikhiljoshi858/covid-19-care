@@ -1,0 +1,213 @@
+{% extends "layout.html" %}
+{% load static %}
+
+{% block content %}
+<style>
+    @media (min-width: 768px) {
+        html {
+            font-size: 16px;
+        }
+    }
+
+    .container {
+        max-width: 960px;
+    }
+
+    .pricing-header {
+        max-width: 700px;
+    }
+
+    .card-deck .card {
+        min-width: 220px;
+    }
+
+    .button {
+        background-color: #4CAF50;
+        border: none;
+        color: white;
+        padding: 20px;
+        text-align: center;
+        text-decoration: none;
+        display: inline-block;
+        font-size: 16px;
+        margin: 4px 2px;
+    }
+
+    .button1 {
+        border-radius: 2px;
+    }
+
+    .button2 {
+        border-radius: 4px;
+    }
+
+    .button3 {
+        border-radius: 8px;
+    }
+
+    .button4 {
+        border-radius: 12px;
+    }
+
+    .button5 {
+        border-radius: 50%;
+    }
+    .myclass:hover{
+        color: white;
+        text-decoration: none;
+        background-color: darkgreen;
+    }
+</style>
+
+<body>
+    <a href="#product" class="myclass button button2 ml-5 mb-1">Jump to the bottom</a>
+    <div class="pricing-header px-3 py-3 pt-md-5 pb-md-4 mx-auto">
+        <h1 class="display-4 text-center">COVID-19 Care</h1>
+        <p class="lead">The novel Coronavirus disease (COVID-19) has been affecting people all over the globe.
+            Millions of people have been detected positive, thousands of them have died.
+            But even after 6 months from the date of detection of the first patient,
+            no specific medication has been found to cure the disease.
+        </p>
+        <p>
+            Below we present a rough overview of the total patients, deaths and recovered cases in India
+        </p>
+        <small>
+            NOTE: The given data is until 1st July 2020
+        </small>
+    </div>
+    <div class="container">
+        <div class="col-xl-12 col-lg-12">
+            <div class="card shadow mb-12">
+                <!-- Card Header - Dropdown -->
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">COVID-19 Patients Review</h6>
+                </div>
+                <!-- Card Body -->
+                <div class="card-body">
+                    <div class="chart-area">
+                        <img src="{% static 'total.png' %}" alt="" height="350" width="850">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <p class="text-center">Fig. 1: A review of the total cases in India</p>
+        <br>
+        <p class="lead">
+            As of July 1st 2020, the total cases in India reported were 5,85,792 and the numbers go on increasing day by
+            day.
+            The first patient was detected in mid February and in almost 3.5 months India already ranks 4th in terms of
+            the most
+            affected country.
+        </p>
+        <div class="col-xl-12 col-lg-12">
+            <div class="card shadow mb-12">
+                <!-- Card Header - Dropdown -->
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">COVID-19 Deaths Review</h6>
+                </div>
+                <!-- Card Body -->
+                <div class="card-body">
+                    <div class="chart-area">
+                        <img src="{% static 'death.png' %}" alt="" height="350" width="850">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <p class="text-center">Fig. 2: A review of the deaths in India.</p>
+        <br>
+        <p class="lead">
+            The total deaths in India are 17,410 as of 1st July 2020. The death rate in India is roughly 5% which is
+            good considering the population India has.
+        </p>
+        <div class="col-xl-12 col-lg-12">
+            <div class="card shadow mb-12">
+                <!-- Card Header - Dropdown -->
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">COVID-19 Recovered Patients Review</h6>
+                </div>
+                <!-- Card Body -->
+                <div class="card-body">
+                    <div class="chart-area">
+                        <img src="{% static 'recovered.png' %}" alt="" height="350" width="850">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <p class="text-center">Fig. 3 : A review of the recovered cases in India</p>
+        <br>
+        <p class="lead">
+            The total count of recovered cases in India is 3,47,979 which is roughly 59.4% which is a good news.
+        </p>
+        <div class="row">
+            <div class="col-lg-4 mb-4">
+                <div class="card bg-primary text-white shadow">
+                    <div class="card-body">
+                        5,85,792
+                        <div class="text-white-50 small">Total Cases</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 mb-4">
+                <div class="card bg-success text-white shadow">
+                    <div class="card-body">
+                        3,47,979
+                        <div class="text-white-50 small">Recovered Cases</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 mb-4">
+                <div class="card bg-danger text-white shadow">
+                    <div class="card-body">
+                        17,410
+                        <div class="text-white-50 small">Total Deaths</div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+        <p class="lead">
+            From this data it is clear that the virus has been causing all sorts of problems in India in terms
+            of economy, livelihood and so on. Even after 6 months from the date of the first patient detected in India,
+            there is no specific vaccine or medication available against this disease. The only medication is to take
+            precaution
+            by following the Government norms of wearning face masks and maintaining social distancing in crowded public
+            places.
+            In this project we propose a method to detect if people are following social distancing and wearning face
+            masks or
+            not in images, videos and webcam feeds.
+        </p>
+        <h5 class="text-center"><img src="{% static 'new.png' %}" height="30" width="30" alt=""> To get real time data
+            related to COVID-19 in India,
+            <a href="https://www.worldometers.info/coronavirus/country/india/" target="blank">click here </a>
+            <img src="{% static 'new.png' %}" height="30" width="30" alt=""></h5>
+        <h5 class="text-center">
+            Click below to get started with the system:
+        </h5><br>
+        <div class="card-deck mb-6 text-center" id="product">
+            <div class="card mb-6 shadow-sm">
+                <div class="card-header">
+                    <h4 class="my-0 font-weight-normal">Face Mask Detector</h4>
+                </div>
+                <div class="card-body">
+                    <h4 class="card-title pricing-card-title">Want to detect if people are wearing face masks or not?
+                    </h4>
+                    <br>
+                    <h4 class="card-title pricing-card-title">Click below to get started</h4>
+                    <a href="mask/" class="btn btn-lg btn-block btn-primary">Get Started</a>
+                </div>
+            </div>
+            <div class="card mb-6 shadow-sm">
+                <div class="card-header">
+                    <h4 class="my-0 font-weight-normal">Social Distancing Detector</h4>
+                </div>
+                <div class="card-body">
+                    <h4 class="card-title pricing-card-title">Want to detect if people are following social distancing
+                        norms or not?</h4>
+                    <h4 class="card-title pricing-card-title">Click below to get started</h4>
+                    <a href="/social" class="btn btn-lg btn-block btn-outline-primary">Get Started</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+{% endblock %}

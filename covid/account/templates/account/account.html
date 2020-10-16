@@ -1,0 +1,84 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+
+<style>
+    .form-signin {
+        width: 100%;
+        max-width: 330px;
+        padding: 15px;
+        margin: auto;
+    }
+
+    .form-signin .checkbox {
+        font-weight: 400;
+    }
+
+    .form-signin .form-control {
+        position: relative;
+        box-sizing: border-box;
+        height: auto;
+        padding: 10px;
+        font-size: 16px;
+    }
+
+    .form-signin .form-control:focus {
+        z-index: 2;
+    }
+
+    .form-signin input[type="email"] {
+        margin-bottom: 10px;
+        border-bottom-right-radius: 0;
+        border-bottom-left-radius: 0;
+    }
+
+    .form-signin input[type="username"] {
+        margin-bottom: 10px;
+        border-top-left-radius: 0;
+        border-top-right-radius: 0;
+    }
+    .blog-posts{
+        max-width: 500px;
+        width: 100%;
+        margin: auto;
+    }
+</style>
+
+<form class="form-signin" method="POST">
+    {% csrf_token %}
+
+    <h1 class="h1 mb-3 font-weight-normal text-center">Account</h1>
+    <h4 class="h4 mb-3 font-weight-normal">You can change your Email ID and Username here.</h2>
+    <br><label for="">Initial Email ID</label>
+    <input type="email" value='{{account_form.initial.email}}' name='email' id="inputEmail" class="form-control"
+        placeholder="Email address" required autofocus>
+    <label for="">Initial Username</label>
+    <input type="text" value='{{account_form.initial.username}}' name='username' id="inputPassword" class="form-control"
+        placeholder="Username" required>
+    {% for field in account_form %}
+    <p>
+        {% for error in field.errors %}
+    <p style="color: red;">{{error}}</p>
+    {% endfor %}
+
+    {% if account_form.non_field_errors %}
+    <div style="color: red;">
+        <p>{{account_form.non_field_errors}}</p>
+    </div>
+    {% endif %}
+    </p>
+    {% endfor %}
+
+    {% if success_message %}
+    <p class='text-center' style='color: green;'>{{success_message}}</p>
+    {% endif %}
+
+    <button class="btn btn-lg btn-primary btn-block" type="submit">Save Changes</button>
+</form>
+
+<div class='d-flex flex-column'>
+    <a class='m-auto' href="{% url 'password_change' %}">Change Password</a>
+</div>
+
+
+{% endblock %}

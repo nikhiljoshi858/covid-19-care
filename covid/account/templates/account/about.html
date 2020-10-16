@@ -1,0 +1,55 @@
+{% extends 'layout.html' %}
+
+{% load static %}
+
+{% block content %}
+
+<div class="container pricing-header px-3 py-3 pt-md-5 pb-md-4 mx-auto">
+    <h1 class="display-4 text-center">About Us</h1>
+    <br>
+    <h3 class="text-center">Developer Team</h3><br>
+    <div class="row">
+        <div class="col-lg-4 col-md-4 col-sm-12">
+            <div class="card" style="width: 18rem;">
+                <img class="card-img-top" height="300" width="100" src="{% static 'srivatsan.jpeg' %}" alt="Card image cap">
+                <div class="card-body">
+                    <h5 class="card-title text-center">Srivatsan Iyengar</h5>
+                    <p class="card-text text-center">Role: ML Development</p>
+                </div>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item">ML Model Hosting</li>
+                    <li class="list-group-item">Handling JSON requests to and from the model</li>
+                </ul>
+            </div>
+        </div>
+        <div class="col-lg-4 col-md-4 col-sm-12">
+            <div class="card" style="width: 18rem;">
+                <img class="card-img-top" height="300" width="100" src="{% static 'nikhil.jpeg' %}" alt="Card image cap">
+                <div class="card-body">
+                    <h5 class="card-title text-center">Nikhil Joshi</h5>
+                    <p class="card-text text-center">Role: ML Development and Back end Designer</p>
+                </div>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item">Training and Testing ML models</li>
+                    <li class="list-group-item">Handling predictions for Webcam feeds</li>
+                </ul>
+            </div>
+        </div>
+        <div class="col-lg-4 col-md-4 col-sm-12">
+            <div class="card" style="width: 18rem;">
+                <img class="card-img-top" height="300" width="100" src="{% static 'krish.jpg' %}" alt="Card image cap">
+                <div class="card-body">
+                    <h5 class="card-title text-center">Krish Mahadevan</h5>
+                    <p class="card-text text-center">Role: Front end and Back end Designer</p>
+                </div>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item">Designing static pages</li>
+                    <li class="list-group-item">Handling Predictions for Video feeds</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <br><br><p class="text-center lead">To contact the Developer team, <a href="{% url 'contact' %}">Click here.</a></p>
+</div>
+
+{% endblock %}
