@@ -15,6 +15,9 @@ from imutils.video import VideoStream
 import imutils
 import time
 from base64 import b64encode
+from datetime import datetime
+from account.models import Previous_Mask
+import pytz
 # import vlc
 # Create your views here.
 
@@ -107,20 +110,29 @@ def image_view(request):
                 print('[INFO] Loading Saved model...')
                 mask, without_mask = model.predict(face)[0]
 
+                global label_image
+
                 if mask > without_mask:
-                    label = 'Mask'
+                    label_image = 'Mask'
                     color = (0, 255, 0)
                 else:
-                    label = 'No Mask'
+                    label_image = 'No Mask'
                     color = (0, 0, 255)
 
-                label = '{}: {:.2f}%'.format(label, max(mask, without_mask) * 100)
+                label = '{}: {:.2f}%'.format(label_image, max(mask, without_mask) * 100)
 
                 cv2.putText(image, label, (startx, starty-10), cv2.FONT_HERSHEY_SIMPLEX, 0.45, color, 2)
                 cv2.rectangle(image, (startx, starty), (endx, endy), color, 2)
 
         uri = b64encode(cv2.imencode('.jpg', image)[1]).decode()
         uri = "data:%s;base64,%s" % ("image/jpeg", uri)
+
+        if label_image == 'Mask':
+            row = Previous_Mask(timestamp=datetime.now(pytz.timezone('Asia/Kolkata')), result='Wearing Mask', category='image')
+        else:
+            row = Previous_Mask(timestamp=datetime.now(pytz.timezone('Asia/Kolkata')), result='Not Wearing Mask', category='image')
+        row.save()
+
         context = {}
         context['image'] = uri
         context['label'] = label
@@ -150,6 +162,14 @@ def video_view(request):
     return render(request, 'mask/video.html')
 
 
+
+def previous_results_view(request):
+    context = {}
+    objects = Previous_Mask.objects.all().order_by('-timestamp')
+    context['previous'] = objects
+    return render(request, 'mask/previous.html', context=context)
+
+
 @login_required(redirect_field_name='mask/webcam/')
 def webcam_view(request):
     prototxtPath = settings.BASE_DIR+'/models/deploy.prototxt'
@@ -175,17 +195,19 @@ def webcam_view(request):
             (startX, startY, endX, endY) = box
             (mask, withoutMask) = pred
 
+            global label_webcam
+
             # player = vlc.MediaPlayer('/home/nikhil/Desktop/Django_Projects/covid/covid/mask/static/alarm.mp3')
             if mask > withoutMask:
-                label = "Mask"
+                label_webcam = "Mask"
                 color = (0, 255, 0)
                 # player.play()
             else:
-                label =  "No Mask"
+                label_webcam =  "No Mask"
                 color = (0, 0, 255)
                 # player.pause()
 
-            label = "{}: {:.2f}%".format(label, max(mask, withoutMask) * 100)
+            label= "{}: {:.2f}%".format(label_webcam, max(mask, withoutMask) * 100)
 
             cv2.putText(frame, label, (startX, startY - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.45, color, 2)
             cv2.rectangle(frame, (startX, startY), (endX, endY), color, 2)
@@ -196,7 +218,14 @@ def webcam_view(request):
         if key == ord("q"):
             break
 
+
     cv2.destroyAllWindows()
     vs.stop()
+    
+    if label_webcam == 'Mask':
+        row = Previous_Mask(timestamp=datetime.now(pytz.timezone('Asia/Kolkata')), result='Wearing Mask', category='video')
+    else:
+        row = Previous_Mask(timestamp=datetime.now(pytz.timezone('Asia/Kolkata')), result='Not Wearing Mask', category='video')
+    row.save()
 
     return render(request, 'mask/home.html')

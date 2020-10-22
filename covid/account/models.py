@@ -1,7 +1,9 @@
 from django.db import models
-from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
+from datetime import datetime
+import pytz
 
+IST = pytz.timezone('Asia/Kolkata')
 
 # Create your models here.
 
@@ -58,3 +60,17 @@ class Account(AbstractBaseUser):
 
     def has_module_perms(self, app_label):
         return True
+
+
+class Previous_Mask(models.Model):
+    timestamp = models.DateTimeField(default=datetime.now(IST))
+    result = models.CharField(max_length=10)
+    category = models.CharField(max_length=10, default=1)
+
+
+class Previous_Social(models.Model):
+    timestamp = models.DateTimeField(default=datetime.now(IST))
+    result = models.IntegerField()
+    category = models.CharField(max_length=10, default=1)
+
+

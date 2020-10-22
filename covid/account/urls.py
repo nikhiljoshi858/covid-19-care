@@ -15,6 +15,7 @@ url_patterns = [
     path('register/', views.register_view, name='register'),
     path('about/', views.about_us_view, name='about_us'),
     path('contact/', views.contact_us_view, name='contact_us'),
+    path('previous/', views.previous_results_view, name='previous'),
     
 
     # Password reset links (ref: https://github.com/django/django/blob/master/django/contrib/auth/views.py)

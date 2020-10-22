@@ -7,6 +7,9 @@ from scipy.spatial import distance as dist
 import imutils
 import os
 from base64 import b64encode
+from datetime import datetime
+from account.models import Previous_Social
+import pytz
 
 
 # Create your views here.
@@ -57,6 +60,12 @@ def detect_people(frame, net, ln, personIdx=0):
 
 	return results
 
+
+def previous_results_view(request):
+    context = {}
+    objects = Previous_Social.objects.all().order_by('-timestamp')
+    context['previous'] = objects
+    return render(request, 'social/previous.html', context=context)
 
 
 @login_required(redirect_field_name='/social/')
@@ -111,6 +120,10 @@ def image_view(request):
 
         uri = b64encode(cv2.imencode('.jpg', img)[1]).decode()
         uri = "data:%s;base64,%s" % ("image/jpeg", uri)
+
+        row = Previous_Social(result=len(violate), category='image')
+        row.save()
+
         context = {}
         context['image'] = uri
         context['number'] = len(violate)
@@ -183,6 +196,10 @@ def webcam_view(request):
 
         if key == ord("q"):
             break
+
+
+    row = Previous_Social(result=len(violate), category='video')
+    row.save()
 
 
     return render(request, 'social/webcam.html')

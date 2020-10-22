@@ -21,6 +21,8 @@ from django.conf.urls.static import static
 
 
 from account import views as av
+from mask import views as mv
+from social import views as sv
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -31,6 +33,9 @@ urlpatterns = [
     path('about/', av.about_us_view, name='about'),
     path('contact/', av.contact_us_view, name='contact'),
     path('account/', av.account_view, name='account'),
+    path('previous/mask/', mv.previous_results_view, name='previous_mask'),
+    path('previous/social/', sv.previous_results_view, name='previous_social'),
+
     
     path('social/',include('social.urls', 'social')),
     path('mask/',include('mask.urls', 'mask')),
