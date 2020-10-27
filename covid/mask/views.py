@@ -19,6 +19,7 @@ from datetime import datetime
 from account.models import Previous_Mask
 import pytz
 from ipstack import GeoLookup
+from .models import Video
 # import vlc
 # Create your views here.
 
@@ -149,21 +150,17 @@ def image_view(request):
 
 @login_required(redirect_field_name='mask/video/')
 def video_view(request):
-
     if request.method == 'POST':
-        video = request.FILES['files'].read()
-        cap = cv2.VideoCapture(str(video))
-        if (cap.isOpened()== False):  
-            return HttpResponse("Error opening video file")
-        while(cap.isOpened()): 
-            ret, frame = cap.read() 
-            if ret == True: 
-                cv2.imshow('Frame', frame) 
-                if cv2.waitKey(25) & 0xFF == ord('q'): 
-                    break    
-            else:  
-                break
-        # return HttpResponse(str(request.FILES['files'].read()))
+        # print(request.POST)
+        # print(request.FILES['video'])
+        video = request.FILES['video']
+        v = Video(video=video)
+        v.save()
+
+        v = Video.objects.last()
+        context = {}
+        context['video'] = v
+        return render(request, 'mask/video_output.html', context=context)
     return render(request, 'mask/video.html')
 
 

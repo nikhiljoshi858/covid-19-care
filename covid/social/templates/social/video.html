@@ -9,9 +9,6 @@
 {% block content %}
 <form method="POST" enctype="multipart/form-data">
     {% csrf_token %}
-    <div class="container">
-
-    </div>
     <div class="dashed_upload">
         <div class="wrapper">
             <div class="drop">
@@ -24,10 +21,10 @@
                         or
                     </div>
                     <div class="browse">
-                        click here to browse
+                        Click here to browse
                     </div>
                 </div>
-                <output id="list"></output><input id="files" name="files" type="file" />
+                <output id="list"></output><input id="files" name="video" type="file">
             </div>
         </div>
         <div class="container">

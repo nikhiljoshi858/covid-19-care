@@ -11,6 +11,7 @@ from datetime import datetime
 from account.models import Previous_Social
 import pytz
 from ipstack import GeoLookup
+from .models import Video
 
 
 # Create your views here.
@@ -143,6 +144,17 @@ def image_view(request):
 
 @login_required(redirect_field_name='/social/video')
 def video_view(request):
+    if request.method == 'POST':
+        video = request.FILES['video']
+        # video = request.POST['video']
+        v = Video(video=video)
+        v.save()
+
+        v = Video.objects.last()
+        context = {}
+        context['video'] = v
+        return render(request, 'social/video_output.html', context=context)
+
     return render(request, 'social/video.html')
 
 
