@@ -18,9 +18,14 @@ from base64 import b64encode
 from datetime import datetime
 from account.models import Previous_Mask
 import pytz
+from ipstack import GeoLookup
 # import vlc
 # Create your views here.
 
+global location
+geo_lookup = GeoLookup('776da34f4f37c2fb8f3ad306cc615bff')
+location = geo_lookup.get_own_location()
+location = location['city'] + ', ' + location['region_name'] + ', ' + location['country_name']
 
 
 def detect_and_predict_mask(frame, faceNet, maskNet):
@@ -72,8 +77,8 @@ def image_view(request):
         image = cv2.imdecode(np.fromstring(request.FILES['files'].read(), np.uint8), cv2.IMREAD_UNCHANGED)
         # prototxtPath = settings.BASE_DIR+'/models/deploy.prototxt'
         # weightsPath = settings.BASE_DIR+'/models/res10_300x300_ssd_iter_140000.caffemodel'
-        prototxtPath = 'D:/Django_Projects/temp/models/deploy.prototxt'
-        weightsPath = 'D:/Django_Projects/temp/models/resnet.caffemodel'
+        prototxtPath = '/home/nikhil/Desktop/models/deploy.prototxt'
+        weightsPath = '/home/nikhil/Desktop/models/resnet.caffemodel'
 
 
         net = cv2.dnn.readNet(prototxtPath, weightsPath)
@@ -100,15 +105,15 @@ def image_view(request):
                 face = preprocess_input(face)
                 face = np.expand_dims(face, axis=0)
 
-                # headers = {'content-type': 'applications/json'}
-                # data = json.dumps({'signature_type': 'serving_default', 'instances': face.tolist()})
-                # json_response = requests.post('http://localhost:8501/v1/models/facemask:predict', data=data, headers=headers)
-                # predictions = json.loads(json_response.text)
-                # mask, without_mask = predictions['predictions'][0]
+                headers = {'content-type': 'applications/json'}
+                data = json.dumps({'signature_type': 'serving_default', 'instances': face.tolist()})
+                json_response = requests.post('http://localhost:8501/v1/models/temp:predict', data=data, headers=headers)
+                predictions = json.loads(json_response.text)
+                mask, without_mask = predictions['predictions'][0]
 
-                model = load_model('D:/Django_Projects/temp/models/temp')
-                print('[INFO] Loading Saved model...')
-                mask, without_mask = model.predict(face)[0]
+                # model = load_model('D:/Django_Projects/temp/models/temp')
+                # print('[INFO] Loading Saved model...')
+                # mask, without_mask = model.predict(face)[0]
 
                 global label_image
 
@@ -128,9 +133,9 @@ def image_view(request):
         uri = "data:%s;base64,%s" % ("image/jpeg", uri)
 
         if label_image == 'Mask':
-            row = Previous_Mask(timestamp=datetime.now(pytz.timezone('Asia/Kolkata')), result='Wearing Mask', category='image')
+            row = Previous_Mask(timestamp=datetime.now(pytz.timezone('Asia/Kolkata')), result='Wearing Mask', category='image', location=location)
         else:
-            row = Previous_Mask(timestamp=datetime.now(pytz.timezone('Asia/Kolkata')), result='Not Wearing Mask', category='image')
+            row = Previous_Mask(timestamp=datetime.now(pytz.timezone('Asia/Kolkata')), result='Not Wearing Mask', category='image', location=location)
         row.save()
 
         context = {}
@@ -165,21 +170,25 @@ def video_view(request):
 
 def previous_results_view(request):
     context = {}
-    objects = Previous_Mask.objects.all().order_by('-timestamp')
+    objects = Previous_Mask.objects.all().order_by('timestamp')
     context['previous'] = objects
     return render(request, 'mask/previous.html', context=context)
 
 
 @login_required(redirect_field_name='mask/webcam/')
 def webcam_view(request):
-    prototxtPath = settings.BASE_DIR+'/models/deploy.prototxt'
-    weightsPath = settings.BASE_DIR+'/models/res10_300x300_ssd_iter_140000.caffemodel'
+    # prototxtPath = settings.BASE_DIR+'/models/deploy.prototxt'
+    # weightsPath = settings.BASE_DIR+'/models/res10_300x300_ssd_iter_140000.caffemodel'
+
+
+    prototxtPath = '/home/nikhil/Desktop/models/deploy.prototxt'
+    weightsPath = '/home/nikhil/Desktop/models/resnet.caffemodel'
 
 
     faceNet = cv2.dnn.readNet(prototxtPath, weightsPath)
 
     print("[INFO] loading face mask detector model...")
-    maskNet = load_model(settings.BASE_DIR+'/models')
+    maskNet = load_model('/home/nikhil/Desktop/models/1')
     print("[INFO] starting video stream...")
 
     vs = VideoStream(src=0).start()
@@ -223,9 +232,9 @@ def webcam_view(request):
     vs.stop()
     
     if label_webcam == 'Mask':
-        row = Previous_Mask(timestamp=datetime.now(pytz.timezone('Asia/Kolkata')), result='Wearing Mask', category='video')
+        row = Previous_Mask(timestamp=datetime.now(pytz.timezone('Asia/Kolkata')), result='Wearing Mask', category='video', location=location)
     else:
-        row = Previous_Mask(timestamp=datetime.now(pytz.timezone('Asia/Kolkata')), result='Not Wearing Mask', category='video')
+        row = Previous_Mask(timestamp=datetime.now(pytz.timezone('Asia/Kolkata')), result='Not Wearing Mask', category='video', location=location)
     row.save()
 
     return render(request, 'mask/home.html')

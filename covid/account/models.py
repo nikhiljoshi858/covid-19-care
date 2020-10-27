@@ -64,13 +64,28 @@ class Account(AbstractBaseUser):
 
 class Previous_Mask(models.Model):
     timestamp = models.DateTimeField(default=datetime.now(IST))
-    result = models.CharField(max_length=10)
+    result = models.CharField(max_length=20)
     category = models.CharField(max_length=10, default=1)
+    location = models.CharField(max_length=500, default=1)
+
+    def __str__(self):
+        return str(self.id)
+
+    class Meta:
+        verbose_name_plural = 'Previous Mask Records'
 
 
 class Previous_Social(models.Model):
     timestamp = models.DateTimeField(default=datetime.now(IST))
     result = models.IntegerField()
-    category = models.CharField(max_length=10, default=1)
+    category = models.CharField(max_length=20, default=1)
+    location = models.CharField(max_length=500, default=1)
+
+    def __str__(self):
+        return str(self.id)
+
+    class Meta:
+        verbose_name_plural = 'Previous Social Distancing Records'
+
 
 

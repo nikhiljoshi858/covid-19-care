@@ -10,6 +10,7 @@ from base64 import b64encode
 from datetime import datetime
 from account.models import Previous_Social
 import pytz
+from ipstack import GeoLookup
 
 
 # Create your views here.
@@ -18,6 +19,12 @@ MIN_CONF = 0.3
 NMS_THRESH = 0.3
 MIN_DISTANCE_IMAGE = 100
 
+
+
+global location
+geo_lookup = GeoLookup('776da34f4f37c2fb8f3ad306cc615bff')
+location = geo_lookup.get_own_location()
+location = location['city'] + ', ' + location['region_name'] + ', ' + location['country_name']
 
 def detect_people(frame, net, ln, personIdx=0):
 	(H, W) = frame.shape[:2]
@@ -63,7 +70,7 @@ def detect_people(frame, net, ln, personIdx=0):
 
 def previous_results_view(request):
     context = {}
-    objects = Previous_Social.objects.all().order_by('-timestamp')
+    objects = Previous_Social.objects.all().order_by('timestamp')
     context['previous'] = objects
     return render(request, 'social/previous.html', context=context)
 
@@ -78,11 +85,11 @@ def image_view(request):
     if request.method == "POST":
         img = cv2.imdecode(np.fromstring(request.FILES['files'].read(), np.uint8), cv2.IMREAD_UNCHANGED)
         
-        labelsPath = 'D:/Django_Projects/temp/models/coco.names'
+        labelsPath = '/home/nikhil/Desktop/models/coco.names'
         LABELS = open(labelsPath).read().strip().split("\n")
 
-        weightsPath = 'D:/Django_Projects/temp/models/yolov3.weights'
-        configPath = 'D:/Django_Projects/temp/models/yolov3.cfg'
+        weightsPath = '/home/nikhil/Desktop/models/yolov3.weights'
+        configPath = '/home/nikhil/Desktop/models/yolov3.cfg'
 
         print("[INFO] loading YOLO from disk...")
         net = cv2.dnn.readNetFromDarknet(configPath, weightsPath)
@@ -121,7 +128,7 @@ def image_view(request):
         uri = b64encode(cv2.imencode('.jpg', img)[1]).decode()
         uri = "data:%s;base64,%s" % ("image/jpeg", uri)
 
-        row = Previous_Social(result=len(violate), category='image')
+        row = Previous_Social(result=len(violate), category='image', location=location)
         row.save()
 
         context = {}
@@ -198,7 +205,7 @@ def webcam_view(request):
             break
 
 
-    row = Previous_Social(result=len(violate), category='video')
+    row = Previous_Social(result=len(violate), category='video', location=location)
     row.save()
 
 

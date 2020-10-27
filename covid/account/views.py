@@ -3,6 +3,7 @@ from account.forms import *
 from django.contrib.auth import logout, login, authenticate
 from django.http import HttpResponse
 
+
 # Create your views here.
 def homepage_view(request):
     return render(request, 'account/home.html')

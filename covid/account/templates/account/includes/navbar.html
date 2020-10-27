@@ -3,11 +3,22 @@
     {% if user.is_authenticated %}
     <h5 class="my-0 mr-md-auto font-weight-normal"><a href="{% url 'homepage' %}"><img src="{% static 'logo.png' %}"
                 alt="" height='60' width="130"></a></h5>
-    <h4 class="ml-2 my-auto mr-md-auto font-weight-bold">Hello, {{user.username}}!!</h5>
+    <h4 class="ml-2 my-auto mr-md-auto font-weight-bold">Hello, {{user.username}}!!</h4>
+    <div class="dropdown">
+        <button class="btn dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown"
+            aria-haspopup="true" aria-expanded="false">
+            View Previous Results
+        </button>
+        <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+            <a class="dropdown-item" href="{% url 'previous_mask' %}">Face Mask Detector</a>
+            <a class="dropdown-item" href="{% url 'previous_social' %}">Social Distancing Detector</a>
+        </div>
+    </div>
     <nav class="my-2 my-md-0 mr-md-3">
         <a class="p-2 text-dark" href="{% url 'account' %}">My Account</a>
     </nav>
-    <a class="btn btn-outline-primary" href="{% url 'logout' %}">Logout</a>
+
+    <a class="btn" href="{% url 'logout' %}">Logout</a>
 
     {% else %}
 
