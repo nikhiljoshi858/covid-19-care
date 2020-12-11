@@ -34,8 +34,16 @@ urlpatterns = [
     path('contact/', av.contact_us_view, name='contact'),
     path('account/', av.account_view, name='account'),
     path('previous/mask/', mv.previous_results_view, name='previous_mask'),
+    path('previous/mask/image/csv', mv.previous_results_image_csv_view, name='previous_mask_image_csv'),
+    path('previous/mask/video/csv', mv.previous_results_video_csv_view, name='previous_mask_video_csv'),
+    path('previous/mask/image/xlsx', mv.previous_results_image_xlsx_view, name='previous_mask_image_xlsx'),
+    path('previous/mask/video/xlsx', mv.previous_results_video_xlsx_view, name='previous_mask_video_xlsx'),
+    
     path('previous/social/', sv.previous_results_view, name='previous_social'),
-
+    path('previous/social/image/csv', sv.previous_results_image_csv_view, name='previous_social_image_csv'),
+    path('previous/social/video/csv', sv.previous_results_video_csv_view, name='previous_social_video_csv'),    
+    path('previous/social/image/xlsx', sv.previous_results_image_xlsx_view, name='previous_social_image_xlsx'),
+    path('previous/social/video/xlsx', sv.previous_results_video_xlsx_view, name='previous_social_video_xlsx'),
     
     path('social/',include('social.urls', 'social')),
     path('mask/',include('mask.urls', 'mask')),

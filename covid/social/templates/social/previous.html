@@ -42,6 +42,16 @@
                     {% endfor %}
                 </tbody>
             </table>
+            <div class="container">
+                <div class="row">
+                    <div class="col">
+                        <a href="{% url 'previous_social_image_xlsx' %}" class="btn btn-success w-100">Download as Excel</a>
+                    </div>
+                    <div class="col">
+                        <a href="{% url 'previous_social_image_csv' %}" class="btn btn-primary w-100">Download as CSV</a>
+                    </div>
+                </div>
+            </div>
         </div>
         <div id="vd" class="tab-pane fade">
             <h3>Results on Videos</h3>
@@ -67,6 +77,16 @@
                     {% endfor %}
                 </tbody>
             </table>
+            <div class="container">
+                <div class="row">
+                    <div class="col">
+                        <a href="{% url 'previous_social_video_xlsx' %}" class="btn btn-success w-100">Download as Excel</a>
+                    </div>
+                    <div class="col">
+                        <a href="{% url 'previous_social_video_csv' %}" class="btn btn-primary w-100">Download as CSV</a>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>

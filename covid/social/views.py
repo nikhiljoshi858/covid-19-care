@@ -1,5 +1,6 @@
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
+from django.http import HttpResponse
 from django.core.files import File
 import numpy as np
 import cv2
@@ -11,6 +12,8 @@ from datetime import datetime
 from account.models import Previous_Social
 import pytz
 from ipstack import GeoLookup
+import csv
+import xlwt
 from .models import Video
 
 
@@ -86,11 +89,11 @@ def image_view(request):
     if request.method == "POST":
         img = cv2.imdecode(np.fromstring(request.FILES['files'].read(), np.uint8), cv2.IMREAD_UNCHANGED)
         
-        labelsPath = '/home/nikhil/Desktop/models/coco.names'
+        labelsPath = 'E:\Django_Projects/temp/models/coco.names'
         LABELS = open(labelsPath).read().strip().split("\n")
 
-        weightsPath = '/home/nikhil/Desktop/models/yolov3.weights'
-        configPath = '/home/nikhil/Desktop/models/yolov3.cfg'
+        weightsPath = 'E:\Django_Projects/temp/models/yolov3.weights'
+        configPath = 'E:\Django_Projects/temp/models/yolov3.cfg'
 
         print("[INFO] loading YOLO from disk...")
         net = cv2.dnn.readNetFromDarknet(configPath, weightsPath)
@@ -160,10 +163,10 @@ def video_view(request):
 
 @login_required(redirect_field_name='/social/webcam')
 def webcam_view(request):
-    labelsPath = '/home/nikhil/Desktop/models/coco.names'
+    labelsPath = 'E:\Django_Projects/temp/models/coco.names'
     LABELS = open(labelsPath).read().strip().split("\n")
 
-    weightsPath = '/home/nikhil/Desktop/models/yolov3.weights'
+    weightsPath = 'E:\Django_Projects/temp/models/yolov3.weights'
     configPath = '/home/nikhil/Desktop/models/yolov3.cfg'
 
     print("[INFO] loading YOLO from disk...")
@@ -223,3 +226,72 @@ def webcam_view(request):
 
     return render(request, 'social/webcam.html')
 
+
+
+def previous_results_image_csv_view(request):
+    rows = Previous_Social.objects.filter(category='image')
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="Previous results on Social Distancing detection in images.csv"'
+    writer = csv.writer(response)
+    writer.writerow(['Sr no.', 'Location', 'Date and Time', 'No. of Violations'])
+    for row in rows:
+        writer.writerow([row.id, row.location, row.timestamp, row.result])
+    return response
+
+
+def previous_results_video_csv_view(request):
+    rows = Previous_Social.objects.filter(category='video')
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="Previous results on Social Distancing detection in videos.csv"'
+    writer = csv.writer(response)
+    writer.writerow(['Sr no.', 'Location', 'Date and Time', 'No. of Violations'])
+    for row in rows:
+        writer.writerow([row.id, row.location, row.timestamp, row.result])
+    return response
+    
+
+def previous_results_image_xlsx_view(request):
+    rows = Previous_Social.objects.filter(category='image')
+    response = HttpResponse(content_type='application/ms-excel')
+    response['Content-Disposition'] = 'attachment; filename="Previous results on Social Distancing detection in images.xls"'
+    wb = xlwt.Workbook(encoding='utf-8')
+    ws = wb.add_sheet('Sheet 1')
+    row_num = 0
+    font_style = xlwt.XFStyle()
+    font_style.font.bold = True
+    columns = ['Sr no.', 'Location', 'Date and Time', 'No. of Violations']
+    for col_num in range(len(columns)):
+        ws.write(row_num, col_num, columns[col_num], font_style)
+    font_style = xlwt.XFStyle()
+    for row in rows:
+        row_num = row_num + 1
+        ws.write(row_num, 0, row.id, font_style)
+        ws.write(row_num, 1, row.location, font_style)
+        ws.write(row_num, 2, str(row.timestamp), font_style)
+        ws.write(row_num, 3, row.result, font_style)
+    wb.save(response)
+    return response
+    
+
+def previous_results_video_xlsx_view(request):
+    rows = Previous_Social.objects.filter(category='video')
+    response = HttpResponse(content_type='application/ms-excel')
+    response['Content-Disposition'] = 'attachment; filename="Previous results on mask detection in videos.xls"'
+    wb = xlwt.Workbook(encoding='utf-8')
+    ws = wb.add_sheet('Sheet 1')
+    row_num = 0
+    font_style = xlwt.XFStyle()
+    font_style.font.bold = True
+    columns = ['Sr no.', 'Location', 'Date and Time', 'No. of Violations']
+    for col_num in range(len(columns)):
+        ws.write(row_num, col_num, columns[col_num], font_style)
+    font_style = xlwt.XFStyle()
+    for row in rows:
+        row_num = row_num + 1
+        ws.write(row_num, 0, row.id, font_style)
+        ws.write(row_num, 1, row.location, font_style)
+        ws.write(row_num, 2, str(row.timestamp), font_style)
+        ws.write(row_num, 3, row.result, font_style)
+    wb.save(response)
+    return response
+    

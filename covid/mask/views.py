@@ -20,6 +20,8 @@ from account.models import Previous_Mask
 import pytz
 from ipstack import GeoLookup
 from .models import Video
+import csv
+import xlwt
 # import vlc
 # Create your views here.
 
@@ -78,8 +80,8 @@ def image_view(request):
         image = cv2.imdecode(np.fromstring(request.FILES['files'].read(), np.uint8), cv2.IMREAD_UNCHANGED)
         # prototxtPath = settings.BASE_DIR+'/models/deploy.prototxt'
         # weightsPath = settings.BASE_DIR+'/models/res10_300x300_ssd_iter_140000.caffemodel'
-        prototxtPath = '/home/nikhil/Desktop/models/deploy.prototxt'
-        weightsPath = '/home/nikhil/Desktop/models/resnet.caffemodel'
+        prototxtPath = 'E:\Django_Projects/temp/models/deploy.prototxt'
+        weightsPath = 'E:\Django_Projects/temp/models/resnet.caffemodel'
 
 
         net = cv2.dnn.readNet(prototxtPath, weightsPath)
@@ -235,3 +237,74 @@ def webcam_view(request):
     row.save()
 
     return render(request, 'mask/home.html')
+
+
+def previous_results_image_csv_view(request):
+    rows = Previous_Mask.objects.filter(category='image')
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="Previous results on mask detection in images.csv"'
+    writer = csv.writer(response)
+    writer.writerow(['Sr no.', 'Location', 'Date and Time', 'Result'])
+    for row in rows:
+        writer.writerow([row.id, row.location, row.timestamp, row.result])
+    return response
+
+
+def previous_results_video_csv_view(request):
+    rows = Previous_Mask.objects.filter(category='video')
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="Previous results on mask detection in videos.csv"'
+    writer = csv.writer(response)
+    writer.writerow(['Sr no.', 'Location', 'Date and Time', 'Result'])
+    for row in rows:
+        writer.writerow([row.id, row.location, row.timestamp, row.result])
+    return response
+
+
+def previous_results_image_xlsx_view(request):
+    rows = Previous_Mask.objects.filter(category='image')
+    response = HttpResponse(content_type='application/ms-excel')
+    response['Content-Disposition'] = 'attachment; filename="Previous results on mask detection in images.xls"'
+    wb = xlwt.Workbook(encoding='utf-8')
+    ws = wb.add_sheet('Sheet 1')
+    row_num = 0
+    font_style = xlwt.XFStyle()
+    font_style.font.bold = True
+    columns = ['Sr no.', 'Location', 'Date and Time', 'Result']
+    for col_num in range(len(columns)):
+        ws.write(row_num, col_num, columns[col_num], font_style)
+    font_style = xlwt.XFStyle()
+    for row in rows:
+        row_num = row_num + 1
+        ws.write(row_num, 0, row.id, font_style)
+        ws.write(row_num, 1, row.location, font_style)
+        ws.write(row_num, 2, str(row.timestamp), font_style)
+        ws.write(row_num, 3, row.result, font_style)
+
+    wb.save(response)
+    return response
+    
+
+def previous_results_video_xlsx_view(request):
+    rows = Previous_Mask.objects.filter(category='video')
+    response = HttpResponse(content_type='application/ms-excel')
+    response['Content-Disposition'] = 'attachment; filename="Previous results on mask detection in videos.xls"'
+    wb = xlwt.Workbook(encoding='utf-8')
+    ws = wb.add_sheet('Sheet 1')
+    row_num = 0
+    font_style = xlwt.XFStyle()
+    font_style.font.bold = True
+    columns = ['Sr no.', 'Location', 'Date and Time', 'Result']
+    for col_num in range(len(columns)):
+        ws.write(row_num, col_num, columns[col_num], font_style)
+    font_style = xlwt.XFStyle()
+    for row in rows:
+        row_num = row_num + 1
+        ws.write(row_num, 0, row.id, font_style)
+        ws.write(row_num, 1, row.location, font_style)
+        ws.write(row_num, 2, str(row.timestamp), font_style)
+        ws.write(row_num, 3, row.result, font_style)
+
+    wb.save(response)
+    return response
+    
