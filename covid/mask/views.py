@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from django.core.files import File
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from tensorflow.keras.applications.mobilenet_v2 import preprocess_input
@@ -14,7 +14,7 @@ import requests
 from imutils.video import VideoStream
 import imutils
 import time
-from base64 import b64encode
+from base64 import b64encode, decodestring, decodebytes, b64decode
 from datetime import datetime
 from account.models import Previous_Mask
 import pytz
@@ -22,6 +22,7 @@ from ipstack import GeoLookup
 from .models import Video
 import csv
 import xlwt
+from django.views.decorators.csrf import csrf_exempt
 # import vlc
 # Create your views here.
 
@@ -132,7 +133,7 @@ def image_view(request):
                 cv2.putText(image, label, (startx, starty-10), cv2.FONT_HERSHEY_SIMPLEX, 0.45, color, 2)
                 cv2.rectangle(image, (startx, starty), (endx, endy), color, 2)
 
-        uri = b64encode(cv2.imencode('.jpg', image)[1]).decode()
+        uri = b64encode(cv2.imencode('.jpg', cv2.resize(image, (300,300)))[1]).decode()
         uri = "data:%s;base64,%s" % ("image/jpeg", uri)
 
         if label_image == 'Mask':
@@ -173,70 +174,87 @@ def previous_results_view(request):
     context['previous'] = objects
     return render(request, 'mask/previous.html', context=context)
 
-
 @login_required(redirect_field_name='mask/webcam/')
+@csrf_exempt
 def webcam_view(request):
     # prototxtPath = settings.BASE_DIR+'/models/deploy.prototxt'
     # weightsPath = settings.BASE_DIR+'/models/res10_300x300_ssd_iter_140000.caffemodel'
+    if request.method == 'POST':
+        uri = request.POST['uri']
+        img_data = b64decode(uri.split(',')[1])
 
+        nparr = np.fromstring(img_data, np.uint8)
+        image = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+        prototxtPath = settings.BASE_DIR+'/models/deploy.prototxt'
+        weightsPath = settings.BASE_DIR+'/models/res10_300x300_ssd_iter_140000.caffemodel'
+        # prototxtPath = 'E:\Django_Projects/temp/models/deploy.prototxt'
+        # weightsPath = 'E:\Django_Projects/temp/models/resnet.caffemodel'
 
-    prototxtPath = '/home/nikhil/Desktop/models/deploy.prototxt'
-    weightsPath = '/home/nikhil/Desktop/models/resnet.caffemodel'
+        net = cv2.dnn.readNet(prototxtPath, weightsPath)
 
+        orig = image.copy()
+        (h, w) = image.shape[:2]
+        blob = cv2.dnn.blobFromImage(image, 1.0, (300, 300), (104.0, 177.0, 123.0))
 
-    faceNet = cv2.dnn.readNet(prototxtPath, weightsPath)
+        net.setInput(blob)
+        detections = net.forward()
 
-    print("[INFO] loading face mask detector model...")
-    maskNet = load_model('/home/nikhil/Desktop/models/1')
-    print("[INFO] starting video stream...")
+        for i in range(0, detections.shape[2]):
+            confidence = detections[0,0,i,2]
+            if confidence > 0.5:
+                box = detections[0,0,i,3:7] * np.array([w,h,w,h])
+                startx, starty, endx, endy = box.astype('int')
+                startx, starty = max(0,startx), max(0,starty)
+                endx, endy = min(w-1, endx), min(h-1, endy)
 
-    vs = VideoStream(src=0).start()
-    time.sleep(2.0)
+                face = image[starty:endy, startx:endx]
+                face = cv2.cvtColor(face, cv2.COLOR_BGR2RGB)
+                face = cv2.resize(face, (224,224))
+                face = img_to_array(face)
+                face = preprocess_input(face)
+                face = np.expand_dims(face, axis=0)
+
+                headers = {'content-type': 'applications/json'}
+                data = json.dumps({'signature_type': 'serving_default', 'instances': face.tolist()})
+                json_response = requests.post('http://localhost:8501/v1/models/mask:predict', data=data, headers=headers)
+                predictions = json.loads(json_response.text)
+                mask, without_mask = predictions['predictions'][0]
+
+                # model = load_model('D:/Django_Projects/temp/models/temp')
+                # print('[INFO] Loading Saved model...')
+                # mask, without_mask = model.predict(face)[0]
+
+                global label_image
+
+                if mask > without_mask:
+                    label_image = 'Mask'
+                    color = (0, 255, 0)
+                else:
+                    label_image = 'No Mask'
+                    color = (0, 0, 255)
+
+                label = '{}: {:.2f}%'.format(label_image, max(mask, without_mask) * 100)
+
+                cv2.putText(image, label, (startx, starty-10), cv2.FONT_HERSHEY_SIMPLEX, 0.45, color, 2)
+                cv2.rectangle(image, (startx, starty), (endx, endy), color, 2)
+
+        uri = b64encode(cv2.imencode('.jpg', image)[1]).decode()
+        uri = "data:%s;base64,%s" % ("image/jpeg", uri)
+        mask = False
+        if label_image == 'Mask':
+            mask = True
+            row = Previous_Mask(timestamp=datetime.now(pytz.timezone('Asia/Kolkata')), result='Wearing Mask', category='image', location=location)
+        else:
+            row = Previous_Mask(timestamp=datetime.now(pytz.timezone('Asia/Kolkata')), result='Not Wearing Mask', category='image', location=location)
+            mask = False
+        row.save()
+
+        context = {}
+        context['image'] = uri
+        context['label'] = label
+        return JsonResponse({'image':uri, 'mask':mask})
     
-    while True:
-        frame = vs.read()
-        frame = imutils.resize(frame, width=800)
-
-        (locs, preds) = detect_and_predict_mask(frame, faceNet, maskNet)
-
-        for (box, pred) in zip(locs, preds):
-            (startX, startY, endX, endY) = box
-            (mask, withoutMask) = pred
-
-            global label_webcam
-
-            # player = vlc.MediaPlayer('/home/nikhil/Desktop/Django_Projects/covid/covid/mask/static/alarm.mp3')
-            if mask > withoutMask:
-                label_webcam = "Mask"
-                color = (0, 255, 0)
-                # player.play()
-            else:
-                label_webcam =  "No Mask"
-                color = (0, 0, 255)
-                # player.pause()
-
-            label= "{}: {:.2f}%".format(label_webcam, max(mask, withoutMask) * 100)
-
-            cv2.putText(frame, label, (startX, startY - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.45, color, 2)
-            cv2.rectangle(frame, (startX, startY), (endX, endY), color, 2)
-
-        cv2.imshow("Frame", frame)
-        key = cv2.waitKey(1) & 0xFF
-
-        if key == ord("q"):
-            break
-
-
-    cv2.destroyAllWindows()
-    vs.stop()
-    
-    if label_webcam == 'Mask':
-        row = Previous_Mask(timestamp=datetime.now(pytz.timezone('Asia/Kolkata')), result='Wearing Mask', category='video', location=location)
-    else:
-        row = Previous_Mask(timestamp=datetime.now(pytz.timezone('Asia/Kolkata')), result='Not Wearing Mask', category='video', location=location)
-    row.save()
-
-    return render(request, 'mask/home.html')
+    return render(request, 'mask/webcam.html')
 
 
 def previous_results_image_csv_view(request):
