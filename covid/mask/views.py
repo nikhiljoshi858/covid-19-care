@@ -178,16 +178,14 @@ def previous_results_view(request):
 def webcam_view(request):
     # prototxtPath = settings.BASE_DIR+'/models/deploy.prototxt'
     # weightsPath = settings.BASE_DIR+'/models/res10_300x300_ssd_iter_140000.caffemodel'
-
-
-    prototxtPath = '/home/nikhil/Desktop/models/deploy.prototxt'
-    weightsPath = '/home/nikhil/Desktop/models/resnet.caffemodel'
+    prototxtPath = 'E:\Django_Projects/temp/models/deploy.prototxt'
+    weightsPath = 'E:\Django_Projects/temp/models/resnet.caffemodel'
 
 
     faceNet = cv2.dnn.readNet(prototxtPath, weightsPath)
 
     print("[INFO] loading face mask detector model...")
-    maskNet = load_model('/home/nikhil/Desktop/models/1')
+    maskNet = load_model('E:/Django_Projects/temp/models/temp')
     print("[INFO] starting video stream...")
 
     vs = VideoStream(src=0).start()

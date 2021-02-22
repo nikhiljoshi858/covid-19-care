@@ -19,16 +19,20 @@ from .models import Video
 
 # Create your views here.
 
+
+FOCAL_LENGTH = 990
 MIN_CONF = 0.3
 NMS_THRESH = 0.3
-MIN_DISTANCE_IMAGE = 100
-
+MIN_DISTANCE = 180
+PPI = 140
+WIDTH = 41.1
 
 
 global location
 geo_lookup = GeoLookup('776da34f4f37c2fb8f3ad306cc615bff')
 location = geo_lookup.get_own_location()
 location = location['city'] + ', ' + location['region_name'] + ', ' + location['country_name']
+
 
 def detect_people(frame, net, ln, personIdx=0):
 	(H, W) = frame.shape[:2]
@@ -66,7 +70,7 @@ def detect_people(frame, net, ln, personIdx=0):
 			(x, y) = (boxes[i][0], boxes[i][1])
 			(w, h) = (boxes[i][2], boxes[i][3])
 
-			r = (confidences[i], (x, y, x + w, y + h), centroids[i])
+			r = (confidences[i], (x, y, x + w, y + h, 41.1*2.54*FOCAL_LENGTH/w), centroids[i])
 			results.append(r)
 
 	return results
@@ -89,11 +93,11 @@ def image_view(request):
     if request.method == "POST":
         img = cv2.imdecode(np.fromstring(request.FILES['files'].read(), np.uint8), cv2.IMREAD_UNCHANGED)
         
-        labelsPath = 'E:\Django_Projects/temp/models/coco.names'
+        labelsPath = 'D:\Django_Projects/temp/models/coco.names'
         LABELS = open(labelsPath).read().strip().split("\n")
 
-        weightsPath = 'E:\Django_Projects/temp/models/yolov3.weights'
-        configPath = 'E:\Django_Projects/temp/models/yolov3.cfg'
+        weightsPath = 'D:\Django_Projects/temp/models/yolov3.weights'
+        configPath = 'D:\Django_Projects/temp/models/yolov3.cfg'
 
         print("[INFO] loading YOLO from disk...")
         net = cv2.dnn.readNetFromDarknet(configPath, weightsPath)
@@ -104,19 +108,26 @@ def image_view(request):
         results = detect_people(img, net, ln, personIdx=LABELS.index("person"))
 
         violate = set()
+        print(results)
 
         if len(results) >= 2:
             centroids = np.array([r[2] for r in results])
-            D = dist.cdist(centroids, centroids, metric="euclidean")
+            D = dist.cdist(centroids, centroids, metric="euclidean").tolist()
 
-            for i in range(0, D.shape[0]):
-                for j in range(i + 1, D.shape[1]):
-                    if D[i, j] < MIN_DISTANCE_IMAGE:
+            for i in range(len(D[0])):
+                for j in range(i + 1, len(D[1])):
+                    print('Stage 1:',D[i][j])
+                    D[i][j] = (D[i][j]  / PPI) * 2.54
+                    print('Stage 2:',D[i][j])
+                    D[i][j] = (D[i][j]**2 + (results[i][1][4] - results[j][1][4])**2) ** 0.5
+                    print('Stage 3:',D[i][j])
+                    print()
+                    if D[i][j] < MIN_DISTANCE:
                         violate.add(i)
                         violate.add(j)
 
         for (i, (prob, bbox, centroid)) in enumerate(results):
-            (startX, startY, endX, endY) = bbox
+            (startX, startY, endX, endY, di) = bbox
             (cX, cY) = centroid
             color = (0, 255, 0)
 
