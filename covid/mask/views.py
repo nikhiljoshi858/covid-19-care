@@ -79,10 +79,10 @@ def homepage_view(request):
 def image_view(request):
     if request.method == "POST":
         image = cv2.imdecode(np.fromstring(request.FILES['files'].read(), np.uint8), cv2.IMREAD_UNCHANGED)
-        # prototxtPath = settings.BASE_DIR+'/models/deploy.prototxt'
-        # weightsPath = settings.BASE_DIR+'/models/res10_300x300_ssd_iter_140000.caffemodel'
-        prototxtPath = 'E:\Django_Projects/temp/models/deploy.prototxt'
-        weightsPath = 'E:\Django_Projects/temp/models/resnet.caffemodel'
+        prototxtPath = settings.BASE_DIR+'/models/deploy.prototxt'
+        weightsPath = settings.BASE_DIR+'/models/res10_300x300_ssd_iter_140000.caffemodel'
+        # prototxtPath = 'E:\Django_Projects/temp/models/deploy.prototxt'
+        # weightsPath = 'E:\Django_Projects/temp/models/resnet.caffemodel'
 
 
         net = cv2.dnn.readNet(prototxtPath, weightsPath)
@@ -111,7 +111,7 @@ def image_view(request):
 
                 headers = {'content-type': 'applications/json'}
                 data = json.dumps({'signature_type': 'serving_default', 'instances': face.tolist()})
-                json_response = requests.post('http://localhost:8501/v1/models/temp:predict', data=data, headers=headers)
+                json_response = requests.post('http://localhost:8501/v1/models/mask:predict', data=data, headers=headers)
                 predictions = json.loads(json_response.text)
                 mask, without_mask = predictions['predictions'][0]
 
@@ -198,7 +198,7 @@ def webcam_view(request):
 
         net.setInput(blob)
         detections = net.forward()
-
+        mask = True
         for i in range(0, detections.shape[2]):
             confidence = detections[0,0,i,2]
             if confidence > 0.5:
@@ -230,6 +230,7 @@ def webcam_view(request):
                     label_image = 'Mask'
                     color = (0, 255, 0)
                 else:
+                    mask = False
                     label_image = 'No Mask'
                     color = (0, 0, 255)
 
@@ -240,18 +241,11 @@ def webcam_view(request):
 
         uri = b64encode(cv2.imencode('.jpg', image)[1]).decode()
         uri = "data:%s;base64,%s" % ("image/jpeg", uri)
-        mask = False
         if label_image == 'Mask':
-            mask = True
             row = Previous_Mask(timestamp=datetime.now(pytz.timezone('Asia/Kolkata')), result='Wearing Mask', category='image', location=location)
         else:
             row = Previous_Mask(timestamp=datetime.now(pytz.timezone('Asia/Kolkata')), result='Not Wearing Mask', category='image', location=location)
-            mask = False
         row.save()
-
-        context = {}
-        context['image'] = uri
-        context['label'] = label
         return JsonResponse({'image':uri, 'mask':mask})
     
     return render(request, 'mask/webcam.html')
