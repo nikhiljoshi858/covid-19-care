@@ -6,20 +6,22 @@
 <div class="row">
     <div class="col-md-4">
         <!-- Stream video via webcam -->
+        <h1>Actual Webcam View</h1>
         <div class="video-wrap">
             <video id="video" playsinline autoplay></video>
         </div>
     </div>
     <div class="col-md-4">
-        <canvas id="canvas" width="640" height="480"></canvas>
+        <h1>Result</h1>
+        <img src="" id="img" alt="">
+        <audio controls id="myAudio" style="visibility: hidden;">
+            <source src="{% static 'alarm.mp3' %}" type="audio/mpeg">
+                Your browser does not support the audio element.
+            </audio>
     </div>
     <div class="col-md-4">
-        <img src="" id="img" alt="">
+        <canvas id="canvas" width="640" style="visibility: hidden;" height="480"></canvas>
     </div>
-    <audio controls id="myAudio">
-        <source src="{% static 'alarm.mp3' %}" type="audio/mpeg">
-    Your browser does not support the audio element.
-    </audio>
 </div>
 
 <script>
