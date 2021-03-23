@@ -1,0 +1,83 @@
+<div class="container text-center">
+<div class="row">
+    <div class="col-md-4">
+        <div id="message" style="visibility: hidden;"></div>
+        <div class="video-wrap">
+            <h1>Actual Video Input</h1>
+            <input type="file" accept="/video/*">
+            <video id="video" controls autoplay width="300" height="300"></video>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <h1>Output</h1>
+        <img src="" id="img" alt="">
+    </div>
+    <div class="col-md-4">
+        <canvas id="canvas" width="640" style="visibility: hidden;" height="480"></canvas>
+    </div>
+    
+    <audio style="visibility: hidden;" controls id="myAudio">
+        {% comment %}
+        <source src="{% static 'alarm.mp3' %}" type="audio/mpeg">
+        {% endcomment %}
+        
+        Your browser does not support the audio element.
+    </audio>
+</div>
+</div>
+<script>
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    const snap = document.getElementById("snap");
+    const errorMsgElement = document.querySelector('span#errorMsg');
+    const img = document.getElementById("img");
+    (function localFileVideoPlayer() {
+        'use strict'
+        var URL = window.URL || window.webkitURL
+        var displayMessage = function (message, isError) {
+            var element = document.querySelector('#message')
+            element.innerHTML = message
+            element.className = isError ? 'error' : 'info'
+        }
+        var playSelectedFile = function (event) {
+            var file = this.files[0]
+            var type = file.type
+            var videoNode = document.querySelector('video')
+            var canPlay = videoNode.canPlayType(type)
+            if (canPlay === '') canPlay = 'no'
+            var message = 'Can play type "' + type + '": ' + canPlay
+            var isError = canPlay === 'no'
+            displayMessage(message, isError)
+
+            if (isError) {
+                return
+            }
+
+            var fileURL = URL.createObjectURL(file)
+            videoNode.src = fileURL
+            var context = canvas.getContext('2d');
+            // snap.addEventListener("click", function() {
+            //     context.drawImage(video, 0, 0, 640, 480);
+            //     img.setAttribute("src",canvas.toDataURL("image/png"));
+            // });
+            setInterval(function () {
+                context.drawImage(video, 0, 0, 300, 300);
+                myHandle();
+            }, 1000);
+            function myHandle() {
+                $.post('/mask/webcam/', { uri: canvas.toDataURL('image/png') }, function (data, status) {
+                    img.setAttribute('src', data.image);
+                    console.log(data);
+                    if (data.mask === false) {
+                        document.getElementById('myAudio').play();
+                    }
+                    else {
+                        document.getElementById('myAudio').pause();
+                    }
+                });
+            }
+        }
+        var inputNode = document.querySelector('input')
+        inputNode.addEventListener('change', playSelectedFile, false)
+    })()
+</script>

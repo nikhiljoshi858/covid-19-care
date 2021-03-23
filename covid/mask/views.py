@@ -28,7 +28,8 @@ from django.views.decorators.csrf import csrf_exempt
 
 prototxtPath = settings.BASE_DIR+'/models/deploy.prototxt'
 weightsPath = settings.BASE_DIR+'/models/res10_300x300_ssd_iter_140000.caffemodel'
-
+maskNet = load_model('D:/Django_Projects/temp/models/temp')
+faceNet = cv2.dnn.readNet(prototxtPath, weightsPath)
 
 global location
 geo_lookup = GeoLookup('776da34f4f37c2fb8f3ad306cc615bff')
@@ -158,35 +159,22 @@ def image_view(request):
 @login_required(redirect_field_name='mask/video/')
 def video_view(request):
     if request.method == 'POST':
-        # print(request.POST)
-        # print(request.FILES['video'])
         video = request.FILES['video']
         v = Video(video=video)
         v.save()
 
         v = Video.objects.last()
-        # return HttpResponse(v.video.url)
-        faceNet = cv2.dnn.readNet(prototxtPath, weightsPath)
-        # return HttpResponse(v.video.url)
-        video = cv2.VideoCapture(settings.BASE_DIR+str(v.video.url))
-        # if video.isOpened() == False:
-        #     width  = video.get(cv2.CAP_PROP_FRAME_WIDTH)
-        #     height = video.get(cv2.CAP_PROP_FRAME_HEIGHT)
-        # size = (int(width), int(height))
-        # return HttpResponse(size)
-        counter = 0
-        maskNet = load_model('D:\Django_Projects/temp/models/temp')
+        video = cv2.VideoCapture(v.video.path)
+        fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+        fps = int(video.get(cv2.CAP_PROP_FPS))
+        width = int(video.get(cv2.CAP_PROP_FRAME_WIDTH))
+        height = int(video.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        mask_video_output = cv2.VideoWriter(settings.MEDIA_ROOT+'/mask_output_video.mp4',fourcc, fps, (width, height))
+
         while True:
             grabbed, frame = video.read()
             if not grabbed:
                 break
-            # cv2.imshow('frame', frame)
-            if counter == 0:
-                width = video.get(cv2.CAP_PROP_FRAME_WIDTH)
-                height = video.get(cv2.CAP_PROP_FRAME_HEIGHT)
-                video_file = cv2.VideoWriter('mask_output.avi', cv2.VideoWriter_fourcc(*"MJPG"), 25, (frame.shape[1], frame.shape[0]))
-                counter = 1
-            frame = imutils.resize(frame, width=800)
             (locs, preds) = detect_and_predict_mask(frame, faceNet, maskNet)
 
             for (box, pred) in zip(locs, preds):
@@ -202,16 +190,10 @@ def video_view(request):
                 label= "{}: {:.2f}%".format(label_webcam, max(mask, withoutMask) * 100)
                 cv2.putText(frame, label, (startX, startY - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.45, color, 2)
                 cv2.rectangle(frame, (startX, startY), (endX, endY), color, 2)
-            video_file.write(frame)
-        
-        # v = Video(video=video_file)
-        # v.save()
-        context = {}
-        context['video'] = video_file
-        return render(request, 'mask/video_output.html', context=context)
+            mask_video_output.write(frame)
+
+        return render(request, 'mask/video_output.html')
     return render(request, 'mask/video.html')
-
-
 
 
 

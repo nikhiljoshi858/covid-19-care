@@ -1,50 +1,13 @@
 {% extends 'layout.html' %}
 
 {% block content %}
+{% load static %}
 <div class="container text-center">
-<<<<<<< HEAD
-    <h1>Video Output</h1><br>
-    <video src="{{video}}" height="500" width="1000" controls></video>
-    <!-- <br><br><br><a class="btn btn-primary w-100" href="{{video}}" download>Download Results</a> -->
-=======
-    <h1>Video Output</h1>
-    <div id="message"></div>
-    <input type="file" accept="video/*" />
-    <video controls autoplay width="300" height="300"></video>
-
-    <script>
-        (function localFileVideoPlayer() {
-            'use strict'
-            var URL = window.URL || window.webkitURL
-            var displayMessage = function (message, isError) {
-                var element = document.querySelector('#message')
-                element.innerHTML = message
-                element.className = isError ? 'error' : 'info'
-            }
-            var playSelectedFile = function (event) {
-                var file = this.files[0]
-                var type = file.type
-                var videoNode = document.querySelector('video')
-                var canPlay = videoNode.canPlayType(type)
-                if (canPlay === '') canPlay = 'no'
-                var message = 'Can play type "' + type + '": ' + canPlay
-                var isError = canPlay === 'no'
-                displayMessage(message, isError)
-
-                if (isError) {
-                    return
-                }
-
-                var fileURL = URL.createObjectURL(file)
-                videoNode.src = fileURL
-
-                alert("hello play");
-            }
-            var inputNode = document.querySelector('input')
-            inputNode.addEventListener('change', playSelectedFile, false)
-        })()
-    </script>
->>>>>>> 9d17f0e4e1c8c556df186d4f8fc30cbfbd96276d
+    <h1>Face Mask Detection Output</h1><br>
+    <video preload="none" controls autoplay height="500" width="1000">
+        <source src="{% static 'tp_movie.mp4' %}" type="video/mp4"></source>
+        Video tag not supported!!
+    </video>
 </div>
 
 {% endblock %}

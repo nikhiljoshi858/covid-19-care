@@ -1,10 +1,25 @@
 {% extends 'layout.html' %}
+{% load static %}
 
 {% block content %}
 <div class="container text-center">
-    <h1>Video Output</h1>
-    <video src="{{video.video.url}}" height="500" width="1000" controls></video>
-    <br><br><br><a class="btn btn-primary w-100" href="{{video.video.url}}" download>Download Results</a>
+    <div class="row">
+        <div class="col">
+            <h1>Social Distancing Output</h1>
+            <video preload="none" autoplay controls height="400" width="500">
+                <source src="{% static 'fivesec.mp4' %}" type="video/mp4"></source>
+                Video tag unsupported.
+            </video>
+        </div>
+        <div class="col">
+            <h1>Bird's Eye View Output</h1>
+            <video preload="none" autoplay controls height="400" width="500">
+                <source src="{% static 'fivesec.mp4' %}" type="video/mp4"></source>
+                Video tag unsupported.
+            </video>
+        </div>
+    </div>
+    <!-- <br><br><br><a class="btn btn-primary w-100" href="{{video.video.url}}" download>Download Results</a> -->
 </div>
 
 {% endblock %}
