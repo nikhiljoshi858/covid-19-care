@@ -216,21 +216,13 @@ def four_point_transform(image, pts):
 
 
 def get_social_distancing_view_video(frame, results, copied_frame, threshold_distance, sd_output_video, matrix):
-    for (i, (prob, bbox, centroid)) in enumerate(results):
-        (startX, startY, endX, endY) = bbox
-        (cX, cY) = centroid
-        color = (0, 255, 0)
-        x = startX + ((endX - startX) // 2)
-        y = endY
-        px = int((matrix[0][0]*x + matrix[0][1]*y + matrix[0][2]) // (matrix[2][0]*x + matrix[2][1]*y + matrix[2][2]))
-        py = int((matrix[1][0]*x + matrix[1][1]*y + matrix[1][2]) // (matrix[2][0]*x + matrix[2][1]*y + matrix[2][2]))
-        centroids.append((px, py))
-
+    violate = set()
     if len(results) >= 2:
+        centroids = np.array([r[2] for r in results])
         D = dist.cdist(centroids, centroids, metric="euclidean").tolist()
         for i in range(len(D[0])):
-            for j in range(i+1, len(D[0])):
-                if D[i][j] < threshold_distance:
+            for j in range(i+1, len(D[1])):
+                if D[i][j] < 100: #Threshold distance
                     violate.add(i)
                     violate.add(j)
 
@@ -238,11 +230,14 @@ def get_social_distancing_view_video(frame, results, copied_frame, threshold_dis
         (startX, startY, endX, endY) = bbox
         (cX, cY) = centroid
         color = (0, 255, 0)
-        mapping[(i, centroids[i][0], centroids[i][1])] = 'norisk'
-
+        x = startX + ((endX - startX) // 2)
+        y = endX
+        px = int((matrix[0][0]*x + matrix[0][1]*y + matrix[0][2]) / (matrix[2][0]*x + matrix[2][1]*y + matrix[2][2]))
+        py = int((matrix[1][0]*x + matrix[1][1]*y + matrix[1][2]) / (matrix[2][0]*x + matrix[2][1]*y + matrix[2][2]))
+        mapping[(i, px, py)] = 'norisk'
         if i in violate:
-            mapping[(i, px, py)] = 'risk'
             color = (0, 0, 255)
+            mapping[(i, px, py)] = 'risk'
 
         cv2.rectangle(copied_frame, (startX, startY), (endX, endY), color, 2)
     
@@ -376,11 +371,13 @@ def video_view(request):
                 get_boundary_points_video(frame)
                 threshold_distance = ((mouse_pts_video[-1][0] - mouse_pts_video[-2][0]) ** 2 + (mouse_pts_video[-1][1] - mouse_pts_video[-2][1]) ** 2) ** 0.5
                 cropping = False
-            results = detect_people(frame, net, ln, personIdx=0)
             ordered_points = order_points(mouse_pts_video[0:4])
             matrix, warped = four_point_transform(frame, ordered_points)
-            get_social_distancing_view_video(frame, results, copied_frame, threshold_distance, sd_video_output, matrix)
-            get_birds_eye_view_video(warped, mapping, bdv_video_output)
+            results = detect_people(frame, net, ln, personIdx=0)
+            violate = set()
+            if len(results) >= 2:
+                get_social_distancing_view_video(frame, results, copied_frame, threshold_distance, sd_video_output, matrix)
+                get_birds_eye_view_video(warped, mapping, bdv_video_output)
         
         return render(request, 'social/video_output.html')
 
