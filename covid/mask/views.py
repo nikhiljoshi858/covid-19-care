@@ -1,3 +1,15 @@
+# Project Name: 	COVID-19 Care: Face Mask and Social Distancing Detection using Deep Learning
+# Author List: 		Nikhil Joshi
+# Filename: 		views.py
+# Functions: 		detect_and_predict_mask(frame, faceNet, maskNet), homepage_view(request),
+#                   image_view(request), video_view(request), webcam_view(request),
+#                   previous_results_image_csv_view(request), previous_results_view(request),
+#                   previous_results_video_csv_view(request), previous_results_image_xlsx_view(request),
+#                   previous_results_video_xlsx_view(request)
+# Global Variables:	prototxtPath, weightsPath, maskNet, faceNet
+
+
+# Import the required libraries
 from django.shortcuts import render
 from django.core.files import File
 from django.http import HttpResponse, JsonResponse
@@ -23,20 +35,34 @@ from .models import Video
 import csv
 import xlwt
 from django.views.decorators.csrf import csrf_exempt
-# import vlc
-# Create your views here.
 
+
+# Load the models for face detection and mask detection
 prototxtPath = settings.BASE_DIR+'/models/deploy.prototxt'
 weightsPath = settings.BASE_DIR+'/models/res10_300x300_ssd_iter_140000.caffemodel'
 maskNet = load_model('D:/Django_Projects/temp/models/temp')
 faceNet = cv2.dnn.readNet(prototxtPath, weightsPath)
 
+# The following piece of code fetches the user location by using the Geolookup library.
+# We need the API key of the library and using that we can fetch the city, region and 
+# country of the user. This data is stored in the previous results database table.
 global location
 geo_lookup = GeoLookup('776da34f4f37c2fb8f3ad306cc615bff')
 location = geo_lookup.get_own_location()
 location = location['city'] + ', ' + location['region_name'] + ', ' + location['country_name']
 
 
+# Function Name:	detect_and_predict_mask
+# Input:		    frame: the frame on which the function is to be applied
+#                   faceNet: the neural network used for face detection (Resnet caffemodel)
+#                   maskNet: the neural network used for classifying the detected faces into 2 classes
+#                   "mask" or "no mask" (MobileNet v2)
+# Output:		    The locations and predictions (with or without mask) of all faces
+# Logic:		    Get the height and width of the frame/image. Construct a blob from the image/frame.
+#                   Run the face detection network to detect the bounding boxes of all faces in the input
+#                   image/frame. For every detected face, run the mask detection model. Return the list of
+#                   the detected faces and predictions.
+# Example Call:		detect_and_predict_mask(frame, faceNet, maskNet)
 def detect_and_predict_mask(frame, faceNet, maskNet):
     (h, w) = frame.shape[:2]
     blob = cv2.dnn.blobFromImage(frame, 1.0, (300, 300), (104.0, 177.0, 123.0))
@@ -74,12 +100,25 @@ def detect_and_predict_mask(frame, faceNet, maskNet):
     return (locs, preds)
 
 
-
+# Function Name:	homepage_view
+# Input:		    HTTP request
+# Output:		    The homepage is displayed
+# Logic:		    Render the HTML and display the same.
+# Example Call:		Called by Django when the particular URL is called by the user
 @login_required(redirect_field_name='mask/')
 def homepage_view(request):
     return render(request, 'mask/home.html')
 
 
+# Function Name:	image_view
+# Input:		    HTTP request
+# Output:		    The output of the mask detection module on the input image is returned
+# Logic:		    The logic is same as the detect_and_predict_mask() function.
+#                   The only difference is that the predictions are got from a Docker container wherein the model is hosted.
+#                   After getting the locations and predictions for all the detecetd faces, draw the bounding
+#                   box and display the text (whether the person is wearing mask or not). Convert
+#                   the image into a base64 uri and send it in the template to render.
+# Example Call:		Called by Django when the particular URL is called by the user
 @login_required(redirect_field_name='mask/image/')
 def image_view(request):
     if request.method == "POST":
@@ -155,7 +194,14 @@ def image_view(request):
     return render(request, 'mask/image.html')
 
 
-
+# Function Name:	video_view
+# Input:		    HTTP request
+# Output:		    The output of the mask detection module on the input video is returned
+# Logic:		    The logic of this function is same as the image_view() function. Firstly, we get the video uploaded by the user.
+#                   Then we construct an object for storing the output video. The logic of the image_view() function is applied
+#                   to every frame of the input video and the processed frame is written in the output video object.
+#                   Finally the output video is returned to the template to render.
+# Example Call:		Called by Django when the particular URL is called by the user
 @login_required(redirect_field_name='mask/video/')
 def video_view(request):
     if request.method == 'POST':
@@ -196,7 +242,12 @@ def video_view(request):
     return render(request, 'mask/video.html')
 
 
-
+# Function Name:	webcam_view
+# Input:		    HTTP request
+# Output:		    The output of the mask detection module on the webcam feed is returned
+# Logic:		    The logic of this function is same as the image_view() function. 
+#                   This function fetches the webcam feed from the user frame by frame and applies the same logic to every frame.
+# Example Call:		Called by Django when the particular URL is called by the user
 @login_required(redirect_field_name='mask/webcam/')
 @csrf_exempt
 def webcam_view(request):
@@ -274,6 +325,14 @@ def webcam_view(request):
     return render(request, 'mask/webcam.html')
 
 
+# Function Name:	previous_results_image_csv_view
+# Input:		    HTTP request
+# Output:		    A CSV file comprising of previous results when the mask detection module
+#                   is applied on images
+# Logic:		    Obtain the previous results records from the database, construct a workbook using xlwt library
+# 		            and fill the workbook row wise while fetching data from the database. Display the link to the file
+#                   as a downloadable link so that the user can download the file
+# Example Call:		Called by Django when the particular URL is called by the user
 def previous_results_image_csv_view(request):
     rows = Previous_Mask.objects.filter(category='image')
     response = HttpResponse(content_type='text/csv')
@@ -284,12 +343,29 @@ def previous_results_image_csv_view(request):
         writer.writerow([row.id, row.location, row.timestamp, row.result])
     return response
 
+
+
+# Function Name:	previous_results_view
+# Input:		    request: HTTP request
+# Output:		    The previous results page is rendered
+# Logic:		    Retrieve the previous results from the database and order them by timestamp.
+#                   Pass them in the template and render the template.
+# Example Call:		Called by Django when the URL for this function is triggered
 def previous_results_view(request):
     context = {}
     objects = Previous_Mask.objects.all().order_by('timestamp')
     context['previous'] = objects
     return render(request, 'mask/previous.html', context=context)
 
+
+# Function Name:	previous_results_video_csv_view
+# Input:		    HTTP request
+# Output:		    A CSV file comprising of previous results when the mask detection module
+#                   is applied on videos
+# Logic:		    Obtain the previous results records from the database, construct a workbook using xlwt library
+# 		            and fill the workbook row wise while fetching data from the database. Display the link to the file
+#                   as a downloadable link so that the user can download the file
+# Example Call:		Called by Django when the particular URL is called by the user
 def previous_results_video_csv_view(request):
     rows = Previous_Mask.objects.filter(category='video')
     response = HttpResponse(content_type='text/csv')
@@ -301,6 +377,14 @@ def previous_results_video_csv_view(request):
     return response
 
 
+# Function Name:	previous_results_image_xlsx_view
+# Input:		    HTTP request
+# Output:		    An excel file comprising of previous results when the mask detection module
+#                   is applied on images
+# Logic:		    Obtain the previous results records from the database, construct a workbook using xlwt library
+# 		            and fill the workbook row wise while fetching data from the database. Display the link to the file
+#                   as a downloadable link so that the user can download the file
+# Example Call:		Called by Django when the particular URL is called by the user
 def previous_results_image_xlsx_view(request):
     rows = Previous_Mask.objects.filter(category='image')
     response = HttpResponse(content_type='application/ms-excel')
@@ -325,6 +409,14 @@ def previous_results_image_xlsx_view(request):
     return response
     
 
+# Function Name:	previous_results_video_xlsx_view
+# Input:		    HTTP request
+# Output:		    An excel file comprising of previous results when the mask detection module
+#                   is applied on videos
+# Logic:		    Obtain the previous results records from the database, construct a workbook using xlwt library
+# 		            and fill the workbook row wise while fetching data from the database. Display the link to the file
+#                   as a downloadable link so that the user can download the file
+# Example Call:		Called by Django when the particular URL is called by the user
 def previous_results_video_xlsx_view(request):
     rows = Previous_Mask.objects.filter(category='video')
     response = HttpResponse(content_type='application/ms-excel')

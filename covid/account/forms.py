@@ -1,3 +1,10 @@
+# Project Name:       COVID-19 Care: Face Mask and Social Distancing Detection using Deep Learning
+# Author List:        Nikhil Joshi
+# Filename:           forms.py
+# Functions:          No functions. This file creates the forms and fields for regsitration, account updation
+#                     and account authentication
+# Global Variables:   NA
+
 from django import forms
 from django.contrib.auth import authenticate
 from django.contrib.auth.forms import UserCreationForm
