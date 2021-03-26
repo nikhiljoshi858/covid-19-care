@@ -1,0 +1,41 @@
+<!-- 
+Project Name: 	    COVID-19 Care: Face Mask and Social Distancing Detection using Deep Learning
+Author List:        Krish Mahadevan, Srivatsan Iyengar
+Filename:           contact.html
+Functions:          No functions. This file displays a feedback form for contacting the developers in case the users want to
+Global Variables:   NA 
+-->
+
+{% extends 'layout.html' %}
+
+{% block content %}
+
+<div class="container pricing-header px-3 py-3 pt-md-5 pb-md-4 mx-auto">
+    <h1 class="display-4 text-center">COVID-19 Care</h1>
+    <h1 class="text-center">Please fill in the following form to get in touch with us...</h1>
+    <br>
+    <form class="form-group" onsubmit="func()">
+        <label for="">First Name</label>
+        <input type="text" class="form-control" placeholder="Enter first name here..." required>
+        <br><label for="">Last Name</label>
+        <input type="text" class="form-control" placeholder="Enter last name here..." required>
+        <br><label for="">Email ID</label>
+        <input type="email" class="form-control" placeholder="Enter email here..." required>
+        <br><label for="">Contact Number</label>
+        <input type="text" class="form-control" placeholder="Enter contact number here..." required>
+        <br><label for="">Feedback</label>
+        <textarea placeholder="Enter feedback here" class="form-control" id="" cols="30" rows="10" required></textarea>
+        <br><div class="text-center">
+            <button type='submit' class="btn btn-primary">Submit</button>
+        </div>
+    </form>
+</div>
+
+<script>
+    function func(){
+        location.href = 'http://127.0.0.1:8000';
+        alert('We have received your feedback. Our team will get in touch with you shortly. Thank you for patience and cooperation!');
+    }
+</script>
+
+{% endblock %}

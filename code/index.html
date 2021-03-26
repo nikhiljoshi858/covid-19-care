@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <h1>HTML5 local video file player example</h1>
+    <div id="message"></div>
+    <input type="file" accept="video/*" />
+    <video id="video" controls width="300" height="300" muted="true"></video>
+    <canvas id="myCanvas" width="300" height="300"></canvas>
+    <script>
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('myCanvas');
+        (function localFileVideoPlayer() {
+            'use strict'
+            var URL = window.URL || window.webkitURL
+            var displayMessage = function (message, isError) {
+                var element = document.querySelector('#message')
+                element.innerHTML = message
+                element.className = isError ? 'error' : 'info'
+            }
+            var playSelectedFile = function (event) {
+                var file = this.files[0]
+                var type = file.type
+                var videoNode = document.querySelector('video')
+                var canPlay = videoNode.canPlayType(type)
+                if (canPlay === '') canPlay = 'no'
+                var message = 'Can play type "' + type + '": ' + canPlay
+                var isError = canPlay === 'no'
+                displayMessage(message, isError)
+
+                if (isError) {
+                    return
+                }
+
+                var fileURL = URL.createObjectURL(file)
+                videoNode.src = fileURL
+            }
+            var inputNode = document.querySelector('input')
+            inputNode.addEventListener('change', playSelectedFile, false)
+        })()
+        var context = canvas.getContext('2d');
+        var polygon = [];
+        var myHeight = [];
+        setInterval(function () {
+            context.drawImage(video, 0, 0, 300, 300);
+
+            if (polygon.length != 0) {
+                context.beginPath();
+                context.fillStyle = "#f00";
+                context.lineWidth = 5;
+                context.strokeStyle = "#000000";
+                context.moveTo(polygon[0][0], polygon[0][1]);
+                context.fillRect(polygon[0][0], polygon[0][1], 10, 10);
+
+                for (var i = 1; i < polygon.length; i++) {
+                    context.fillRect(polygon[i][0], polygon[i][1], 10, 10);
+                    context.lineTo(polygon[i][0], polygon[i][1]);
+                }
+                context.closePath();
+                context.stroke();
+            }
+            if (myHeight.length != 0) {
+                context.beginPath();
+                context.fillStyle = "green";
+                context.lineWidth = 5;
+                context.strokeStyle = "blue";
+                context.moveTo(myHeight[0][0], myHeight[0][1]);
+                context.fillRect(myHeight[0][0], myHeight[0][1], 10, 10);
+                if(myHeight.length == 2){
+                    context.fillRect(myHeight[1][0], myHeight[1][1], 10, 10);
+                    context.lineTo(myHeight[1][0], myHeight[1][1]);
+                }
+                context.closePath();
+                context.stroke();
+            }
+            console.log(polygon);
+        }, 1000);
+        function getCursorPosition(context, event) {
+            const rect = canvas.getBoundingClientRect()
+            const x = event.clientX - rect.left
+            const y = event.clientY - rect.top
+            context.fillStyle = '#f00';
+            if (polygon.length < 4) {
+                polygon.push([x, y]);
+            }
+            else if(myHeight.length<2) {
+                myHeight.push([x, y]);
+            }
+        }
+        canvas.addEventListener('mousedown', function (e) {
+            getCursorPosition(context, e)
+
+        })
+    </script>
+</body>
+
+</html>

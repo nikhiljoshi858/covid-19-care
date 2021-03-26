@@ -1,0 +1,46 @@
+<!-- 
+Project Name:       COVID-19 Care: Face Mask and Social Distancing Detection using Deep Learning
+Author List:        Srivatsan Iyengar
+Filename:           video.html
+Functions:          No functions. This file represents the page where the user can upload a video for mask detection
+Global Variables:   NA 
+-->
+
+{% extends "layout.html" %}
+{% load static %}
+{% block head %}
+<link rel="stylesheet" href="{% static 'fonts/font-awesome.min.css'%}">
+<link rel="stylesheet" href="{% static 'css/Drag--Drop-Upload-Form.css'%}">
+<link rel="stylesheet" href="{% static 'css/Drag-Drop-File-Input-Upload.css'%}">
+<link rel="stylesheet" href="{% static 'css/styles.css'%}">
+{% endblock %}
+{% block content %}
+<form method="POST" enctype="multipart/form-data">
+    {% csrf_token %}
+    <div class="dashed_upload">
+        <div class="wrapper">
+            <div class="drop">
+                <div class="cont">
+                    <i class="fa fa-cloud-upload"></i>
+                    <div class="tit">
+                        Drag & Drop
+                    </div>
+                    <div class="desc">
+                        or
+                    </div>
+                    <div class="browse">
+                        Click here to browse
+                    </div>
+                </div>
+                <output id="list"></output><input id="files" name="video" type="file">
+            </div>
+        </div>
+        <div class="container">
+            <input type="submit" class="btn btn-outline-primary w-100" value="Upload and Predict">
+        </div>
+</form>
+{% block bottom %}
+<script src='http://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js'></script>
+<script src="{% static 'js/jquery.min.js'%}"></script>
+{% endblock %}
+{% endblock %}

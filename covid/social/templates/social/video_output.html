@@ -1,0 +1,20 @@
+<!-- 
+Project Name:       COVID-19 Care: Face Mask and Social Distancing Detection using Deep Learning
+Author List:        Nikhil Joshi
+Filename:           home.html
+Functions:          No functions. This file displays the output of the social distancing module on the uploaded video
+Global Variables:   NA 
+-->
+
+{% extends 'layout.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container text-center">
+    <h1>Social Distancing Output</h1><br>
+    <p class="lead">Your results are ready!!</p>
+    <p class="lead">Click below to download the results</p>
+    <a class="w-100 btn btn-success btn-lg " href="/media/sd_output_video.mp4" download>Download Results</a>
+</div>
+
+{% endblock %}

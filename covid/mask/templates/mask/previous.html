@@ -1,0 +1,102 @@
+<!-- 
+Project Name:       COVID-19 Care: Face Mask and Social Distancing Detection using Deep Learning
+Author List:        Srivatsan Iyengar
+Filename:           previous.html
+Functions:          No functions. This file displays the previous records fetched from the database
+                    for the mask detection module
+Global Variables:   NA 
+-->
+
+{% extends 'layout.html' %}
+
+{% block content %}
+
+<head>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+</head>
+<h1 class="h1 mb-3 font-weight-normal text-center">Face Mask Detector</h1>
+<h3 class="mb-3 font-weight-normal text-center">Previous Prediction Results</h1>
+
+
+    <div class="container">
+        <ul class="nav nav-tabs">
+            <li class="active"><a data-toggle="tab" href="#img" class="mx-auto">Images</a></li>
+            <li><a data-toggle="tab" href="#vd">Videos</a></li>
+        </ul>
+
+        <div class="tab-content">
+            <div id="img" class="tab-pane fade in active">
+                <h3>Results on Images</h3>
+                <table class="table table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th scope="col">Sr. no.</th>
+                            <th scope="col">Date and Time</th>
+                            <th scope="col">Location</th>
+                            <th scope="col">Result</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in previous %}
+                        {% if row.category == 'image' %}
+                        <tr>
+                            <td>{{row.id}}</td>
+                            <td>{{row.timestamp}}</td>
+                            <td>{{row.location}}</td>
+                            <td>{{row.result}}</td>
+                        </tr>
+                        {% endif %}
+                        {% endfor %}
+                    </tbody>
+                </table>
+                <div class="container">
+                    <div class="row">
+                        <div class="col">
+                            <a href="{% url 'previous_mask_image_xlsx' %}" class="btn btn-success w-100">Download as Excel</a>
+                        </div>
+                        <div class="col">
+                            <a href="{% url 'previous_mask_image_csv' %}" class="btn btn-primary w-100">Download as CSV</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="vd" class="tab-pane fade">
+                <h3>Results on Videos</h3>
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th scope="col">Sr. no.</th>
+                            <th scope="col">Date and Time</th>
+                            <th scope="col">Location</th>
+                            <th scope="col">Result</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in previous %}
+                        {% if row.category == 'video' %}
+                        <tr>
+                            <td>{{row.id}}</td>
+                            <td>{{row.timestamp}}</td>
+                            <td>{{row.location}}</td>
+                            <td>{{row.result}}</td>
+                        </tr>
+                        {% endif %}
+                        {% endfor %}
+                    </tbody>
+                </table>
+                <div class="container">
+                    <div class="row">
+                        <div class="col">
+                            <a href="{% url 'previous_mask_video_xlsx' %}" class="btn btn-success w-100">Download as Excel</a>
+                        </div>
+                        <div class="col">
+                            <a href="{% url 'previous_mask_video_csv' %}" class="btn btn-primary w-100">Download as CSV</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endblock %}

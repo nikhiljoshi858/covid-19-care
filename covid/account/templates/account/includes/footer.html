@@ -1,0 +1,46 @@
+{% load static %}
+
+<!-- 
+Project Name: 	    COVID-19 Care: Face Mask and Social Distancing Detection using Deep Learning
+Author List:        Krish Mahadevan, Srivatsan Iyengar
+Filename:           footer.html
+Functions:          No functions. This file displays the footer of every page
+Global Variables:   NA 
+-->
+
+
+<footer style="background-color: white;" class="pt-4 my-md-5 pt-md-5 border-top">
+    <div class="mx-auto row">
+        <div class="col-lg-4 col-md-4">
+            <h5>Quick Links</h5>
+            <ul class="list-unstyled text-small">
+                <li><a class="text-muted" href="{% url 'login' %}">Login</a></li>
+                <li><a class="text-muted" href="{% url 'register' %}">Register</a></li>
+                <li><a class="text-muted" href="{% url 'account' %}">Account Settings</a></li>
+            </ul>
+        </div>
+        <div class="col-lg-4 col-md-4">
+            <h5>Social Links</h5>
+            <ul class="list-unstyled text-small">
+                <li><a class="text-muted" href="#"><img src="{% static 'facebook-brands.svg' %}" height="30" width="30" alt=""></a></li>
+                <li><a class="text-muted" href="#"><img src="{% static 'gmail.png' %}" height="30" width="30" alt=""></a></li>
+                <li><a class="text-muted" href="#"><img src="{% static 'instagram-brands.svg' %}" height="30" width="30" alt=""></a></li>
+                <li><a class="text-muted" href="#"><img src="{% static 'whatsapp-brands.svg' %}" height="30" width="30" alt=""></a></li>
+                <li><a class="text-muted" href="#"><img src="{% static 'twitter-brands.svg' %}" height="30" width="30" alt=""></a></li>
+                <li><a class="text-muted" href="#"><img src="{% static 'whatsapp-brands.svg' %}" height="30" width="30" alt=""></a></li>
+            </ul>
+        </div>
+        <div class="col-lg-4 col-md-8">
+            <h5>About</h5>
+            <ul class="list-unstyled text-small">
+                <li><a class="text-muted" href="{% url 'about' %}">About Us</a></li>
+                <li><a class="text-muted" href="{% url 'contact' %}">Contact Us</a></li>
+                
+            </ul>
+        </div>
+        
+        <div class="col-lg-12 col-md-12 text-center">
+            <p class="d-block mb-3 text-muted">© 2020 Copyright: COVID-19 Care</p>
+        </div>
+    </div>
+</footer>

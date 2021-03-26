@@ -1,0 +1,93 @@
+<!-- 
+Project Name:       COVID-19 Care: Face Mask and Social Distancing Detection using Deep Learning
+Author List:        Srivatsan Iyengar
+Filename:           webcam.html
+Functions:          No functions. This file reads the webcam feed frame by frame and detects if the person
+                    are wearing a mask or not. An alarm is sounded if the person is not wearing a mask
+Global Variables:   NA 
+-->
+
+{% extends "layout.html" %}
+{% load static %}
+{% block content %}
+<p><span id="errorMsg"></span></p>
+<div class="container text-center">
+    <div class="row">
+        <div class="col">
+            <!-- Stream video via webcam -->
+            <h1>Webcam View</h1>
+            <div class="video-wrap">
+                <video id="video" playsinline autoplay height="500" width="500"></video>
+            </div>
+        </div>
+        <div class="col">
+            <canvas id="canvas" width="500" style="visibility: hidden;" height="500"></canvas>
+        </div>
+        <div class="col">
+            <h1>Result</h1>
+            <img src="" id="img" alt="">
+            <audio controls id="myAudio" style="visibility: hidden;">
+                <source src="{% static 'alarm.mp3' %}" type="audio/mpeg">
+                Your browser does not support the audio element.
+            </audio>
+        </div>
+    </div>
+</div>
+<script>
+
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    const snap = document.getElementById("snap");
+    const errorMsgElement = document.querySelector('span#errorMsg');
+    const img = document.getElementById("img");
+
+    const constraints = {
+        audio: false,
+        video: {
+            width: 500, height: 500
+        }
+    };
+
+    // Access webcam
+    async function init() {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia(constraints);
+            handleSuccess(stream);
+        } catch (e) {
+            errorMsgElement.innerHTML = `navigator.getUserMedia error:${e.toString()}`;
+        }
+    }
+
+    // Success
+    function handleSuccess(stream) {
+        window.stream = stream;
+        video.srcObject = stream;
+    }
+
+    // Load init
+    init();
+
+    // Draw image
+    var context = canvas.getContext('2d');
+    // snap.addEventListener("click", function() {
+    //     context.drawImage(video, 0, 0, 640, 480);
+    //     img.setAttribute("src",canvas.toDataURL("image/png"));
+    // });
+    setInterval(function () {
+        context.drawImage(video, 0, 0, 500, 500);
+        myHandle();
+    }, 1000);
+    function myHandle() {
+        $.post('/mask/webcam/', { uri: canvas.toDataURL('image/png') }, function (data, status) {
+            img.setAttribute('src', data.image);
+            console.log(data);
+            if (data.mask === false) {
+                document.getElementById('myAudio').play();
+            }
+            else {
+                document.getElementById('myAudio').pause();
+            }
+        });
+    }
+</script>
+{% endblock %}

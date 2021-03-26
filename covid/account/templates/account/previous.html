@@ -1,0 +1,96 @@
+<!-- 
+Project Name: 	    COVID-19 Care: Face Mask and Social Distancing Detection using Deep Learning
+Author List:        Nikhil Joshi
+Filename:           previous.html
+Functions:          No functions. This file displays the previous records for both the modules in a tabular format for additional analysis (if any)
+Global Variables:   NA 
+-->
+
+{% extends 'layout.html' %}
+
+{% block content %}
+
+<head>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+</head>
+<h1 class="h1 mb-3 font-weight-normal text-center">Previous Prediction Results</h1>
+
+<div class="container">
+    <ul class="nav nav-tabs">
+        <li class="active"><a data-toggle="tab" href="{% url 'previous_mask' %}" class="mx-auto">Face Mask Detector</a></li>
+        <li><a data-toggle="tab" href="{% url 'previous_social' %}">Social Distancing Detector</a></li>
+    </ul>
+
+    <div class="tab-content">
+        <div id="fmd" class="tab-pane fade in active">
+            <h3>Face Mask Detector Results</h3>
+            <table class="table table-striped table-hover">
+                <thead>
+                    <tr>
+                        <th scope="col">Sr. no.</th>
+                        <th scope="col">Date and Time</th>
+                        <th scope="col">Result</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <th scope="row">1</th>
+                        <td>Mark</td>
+                        <td>Otto</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">2</th>
+                        <td>Jacob</td>
+                        <td>Thornton</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">3</th>
+                        <td>Larry</td>
+                        <td>the Bird</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div id="sdd" class="tab-pane fade">
+            <h3>Social Distancing Detector Results</h3>
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th scope="col">Sr. no.</th>
+                        <th scope="col">Date and Time</th>
+                        <th scope="col">No. of Violations</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <th scope="row">1</th>
+                        <td>Mark</td>
+                        <td>Otto</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">2</th>
+                        <td>Jacob</td>
+                        <td>Thornton</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">3</th>
+                        <td>Larry</td>
+                        <td>the Bird</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div id="menu2" class="tab-pane fade">
+            <h3>Menu 2</h3>
+            <p>Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam
+                rem aperiam.</p>
+        </div>
+        <div id="menu3" class="tab-pane fade">
+            <h3>Menu 3</h3>
+            <p>Eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo.</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

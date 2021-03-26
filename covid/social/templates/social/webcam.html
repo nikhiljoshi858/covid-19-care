@@ -1,0 +1,179 @@
+<!-- 
+Project Name:       COVID-19 Care: Face Mask and Social Distancing Detection using Deep Learning
+Author List:        Srivatsan Iyengar
+Filename:           webcam.html
+Functions:          No functions. This file displays the webcam feed and the results
+                    of the social distancing module on those webcam feeds. An alarm is sounded
+                    if any social distancing violations are detected
+Global Variables:   NA 
+-->
+
+{% extends "layout.html" %}
+{% load static %}
+{% block content %}
+<p><span id="errorMsg"></span></p>
+<div class="container text-center">
+    <div class="row">
+        <div class="col-md-4 px-1">
+            <!-- Stream video via webcam -->
+            <h1>Webcam View</h1>
+            <div class="video-wrap">
+                <video id="video" playsinline autoplay height="400" width="400"></video>
+            </div>
+        </div>
+        <div class="col-md-4 px-1">
+            <h1>Select points</h1>
+            <canvas id="canvas" width="400" height="400"></canvas>
+            <button id="btn">Start Detection</button>
+            <button id="btn1">End Detection</button>
+        </div>
+        <div class="col-md-4 px-1">
+            <h1>Result</h1>
+            <img src="" id="img" alt="">
+        </div>
+
+    </div>
+    <audio controls id="myAudio" style="visibility: hidden;">
+        <source src="{% static 'alarm.mp3' %}" type="audio/mpeg">
+        Your browser does not support the audio element.
+    </audio>
+    <canvas id="fake" style="visibility: hidden;" width="400" height="400"></canvas>
+</div>
+<script>
+
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    const snap = document.getElementById("snap");
+    const errorMsgElement = document.querySelector('span#errorMsg');
+    const img = document.getElementById("img");
+    const fake = document.getElementById('fake');
+
+    const constraints = {
+        audio: false,
+        video: {
+            width: 400, height: 400
+        }
+    };
+
+    // Access webcam
+    async function init() {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia(constraints);
+            handleSuccess(stream);
+        } catch (e) {
+            errorMsgElement.innerHTML = `navigator.getUserMedia error:${e.toString()}`;
+        }
+    }
+
+    // Success
+    function handleSuccess(stream) {
+        window.stream = stream;
+        video.srcObject = stream;
+    }
+
+    // Load init
+    init();
+
+    // Draw image
+    var context = canvas.getContext('2d');
+    var fake_context = fake.getContext('2d');
+    // snap.addEventListener("click", function() {
+    //     context.drawImage(video, 0, 0, 640, 480);
+    //     img.setAttribute("src",canvas.toDataURL("image/png"));
+    // });
+    var context = canvas.getContext('2d');
+    var polygon = [];
+    var myHeight = [];
+    var flag = false;
+    setInterval(function () {
+        context.drawImage(video, 0, 0, 400, 400);
+        fake_context.drawImage(video, 0, 0, 400, 400);
+
+        if (polygon.length != 0) {
+            context.beginPath();
+            context.fillStyle = "#f00";
+            context.lineWidth = 5;
+            context.strokeStyle = "#000000";
+            context.moveTo(polygon[0][0], polygon[0][1]);
+            context.fillRect(polygon[0][0], polygon[0][1], 10, 10);
+
+            for (var i = 1; i < polygon.length; i++) {
+                context.fillRect(polygon[i][0], polygon[i][1], 10, 10);
+                context.lineTo(polygon[i][0], polygon[i][1]);
+            }
+            context.closePath();
+            context.stroke();
+        }
+        if (myHeight.length != 0) {
+            context.beginPath();
+            context.fillStyle = "green";
+            context.lineWidth = 5;
+            context.strokeStyle = "blue";
+            context.moveTo(myHeight[0][0], myHeight[0][1]);
+            context.fillRect(myHeight[0][0], myHeight[0][1], 10, 10);
+            if (myHeight.length == 2) {
+                context.fillRect(myHeight[1][0], myHeight[1][1], 10, 10);
+                context.lineTo(myHeight[1][0], myHeight[1][1]);
+            }
+            context.closePath();
+            context.stroke();
+        }
+        console.log(polygon);
+        console.log(myHeight);
+
+        if(flag){
+            myHandle();
+        }
+    }, 2000);
+    function getCursorPosition(context, event) {
+        const rect = canvas.getBoundingClientRect()
+        const x = event.clientX - rect.left
+        const y = event.clientY - rect.top
+        context.fillStyle = '#f00';
+        if (polygon.length < 4) {
+            polygon.push([x, y]);
+        }
+        else if (myHeight.length < 2) {
+            myHeight.push([x, y]);
+        }
+    }
+    canvas.addEventListener('mousedown', function (e) {
+        getCursorPosition(context, e)
+
+    })
+    function myHandle() {
+        $.post('/social/webcam/', {
+            uri:fake.toDataURL('image/png'),
+            polygonOnex:polygon[0][0], 
+            polygonOney:polygon[0][1],
+            polygonTwox:polygon[1][0],
+            polygonTwoy:polygon[1][1],
+            polygonThreex:polygon[2][0],
+            polygonThreey:polygon[2][1],
+            polygonFourx:polygon[3][0],
+            polygonFoury:polygon[3][1],
+            heightOnex:myHeight[0][0],
+            heightOney:myHeight[0][1],
+            heightTwox:myHeight[1][0],
+            heightTwoy:myHeight[1][1],
+            }, function (data, status) {
+            img.setAttribute('src', data.sd_view);
+            console.log(data);
+            // if (data.mask === false) {
+            //     document.getElementById('myAudio').play();
+            // }
+            // else {
+            //     document.getElementById('myAudio').pause();
+            // }
+        });
+    }
+    const myBtn = document.getElementById('btn');
+    myBtn.addEventListener('click', function(){
+        flag = true;
+    });
+    const mybtn1 = document.getElementById('btn1');
+    mybtn1.addEventListener('click', function(){
+        flag = false;
+    });
+</script>
+{% endblock %}

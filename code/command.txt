@@ -1,0 +1,5 @@
+docker stop $(docker ps -a -q)
+
+docker-machine stop
+
+docker run -t --rm -p 8501:8501 -v "d/Django_Projects/temp:/models/temp" -e MODEL_NAME=temp tensorflow/serving
