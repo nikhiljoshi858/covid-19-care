@@ -13,11 +13,14 @@ from django.core.files import File
 from django.http import HttpResponse, JsonResponse
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
+from threading import Thread
 from tensorflow.keras.applications.mobilenet_v2 import preprocess_input
 from tensorflow.keras.preprocessing.image import img_to_array
 from tensorflow.keras.models import load_model
 import numpy as np
 import cv2
+import sys
+from queue import Queue
 import os
 import json
 import requests
@@ -31,6 +34,7 @@ import pytz
 from ipstack import GeoLookup
 from .models import Video
 import csv
+from imutils.video import FPS
 import xlwt
 from django.views.decorators.csrf import csrf_exempt
 # import vlc
@@ -41,6 +45,41 @@ prototxtPath = settings.BASE_DIR + '/models/deploy.prototxt'
 weightsPath = settings.BASE_DIR + '/models/resnet.caffemodel'
 maskNet = load_model(settings.BASE_DIR + '/models')
 faceNet = cv2.dnn.readNet(prototxtPath, weightsPath)
+
+
+
+class MultithreadedVideoStream:
+    def __init__(self, path, queuesize=1024):
+        self.stream = cv2.VideoCapture(path)
+        self.stopped = False
+        self.Q = Queue(maxsize=queuesize)
+
+    def start(self):
+        t = Thread(target=self.update, args=())
+        t.daemon = True
+        t.start()
+        return self
+
+    def update(self):
+        while True:
+            if self.stopped:
+                return
+            if not self.Q.full():
+                grabbed, frame = self.stream.read()
+                if not grabbed:
+                    self.stop()
+                    return
+                self.Q.put(frame)
+
+    def read(self):
+        return self.Q.get()
+
+    def more(self):
+        return self.Q.qsize() > 0
+
+    def stop(self):
+        self.stopped = True
+
 
 
 # The following piece of code fetches the user location by using the Geolookup library.
@@ -203,16 +242,17 @@ def video_view(request):
 
         v = Video.objects.last()
         video = cv2.VideoCapture(v.video.path)
+        mvs = MultithreadedVideoStream(v.video.path).start()
+        time.sleep(1.0)
+        myfps = FPS().start()
         fourcc = cv2.VideoWriter_fourcc(*'mp4v')
         fps = int(video.get(cv2.CAP_PROP_FPS))
         width = int(video.get(cv2.CAP_PROP_FRAME_WIDTH))
         height = int(video.get(cv2.CAP_PROP_FRAME_HEIGHT))
         mask_video_output = cv2.VideoWriter(settings.MEDIA_ROOT+'/mask_output_video.mp4',fourcc, fps, (width, height))
 
-        while True:
-            grabbed, frame = video.read()
-            if not grabbed:
-                break
+        while mvs.more():
+            frame = mvs.read()
             (locs, preds) = detect_and_predict_mask(frame, faceNet, maskNet)
 
             for (box, pred) in zip(locs, preds):
@@ -229,7 +269,10 @@ def video_view(request):
                 cv2.putText(frame, label, (startX, startY - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.45, color, 2)
                 cv2.rectangle(frame, (startX, startY), (endX, endY), color, 2)
             mask_video_output.write(frame)
-
+            myfps.update()
+        myfps.stop()
+        print("[INFO] elasped time: {:.2f}".format(myfps.elapsed()))
+        print("[INFO] approx. FPS: {:.2f}".format(myfps.fps()))
         path = "file:////"+settings.BASE_DIR+'/media/mask_output_video.mp4'
         return render(request, 'mask/video_output.html',{"path":path})
     return render(request, 'mask/video.html')

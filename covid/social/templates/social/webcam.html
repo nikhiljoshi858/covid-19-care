@@ -12,32 +12,40 @@ Global Variables:   NA
 {% load static %}
 {% block content %}
 <p><span id="errorMsg"></span></p>
-<div class="container text-center">
+<div class="text-center">
     <div class="row">
         <div class="col-md-4 px-1">
             <!-- Stream video via webcam -->
             <h1>Webcam View</h1>
             <div class="video-wrap">
-                <video id="video" playsinline autoplay height="400" width="400"></video>
+                <video id="video" playsinline autoplay height="500" width="500"></video>
             </div>
         </div>
-        <div class="col-md-4 px-1">
+        <div id="bdv" class="col-md-4 px-1">
             <h1>Select points</h1>
-            <canvas id="canvas" width="400" height="400"></canvas>
-            <button id="btn">Start Detection</button>
-            <button id="btn1">End Detection</button>
+            <canvas id="canvas" width="500" height="500"></canvas>
         </div>
-        <div class="col-md-4 px-1">
+        <div id="sd" class="col-md-4 px-1">
             <h1>Result</h1>
             <img src="" id="img" alt="">
         </div>
-
+        <br>
+        <div class="container">
+            <div class="row">
+                <div class="col">
+                    <br><button id="start_btn" class="btn btn-success w-100">Start Detection</button>
+                </div>
+                <div class="col">
+                    <br><button id="end_btn" class="btn btn-danger w-100">End Detection</button>
+                </div>
+            </div>
+        </div>
     </div>
     <audio controls id="myAudio" style="visibility: hidden;">
         <source src="{% static 'alarm.mp3' %}" type="audio/mpeg">
         Your browser does not support the audio element.
     </audio>
-    <canvas id="fake" style="visibility: hidden;" width="400" height="400"></canvas>
+    <canvas id="fake" style="visibility: hidden;" width="500" height="500"></canvas>
 </div>
 <script>
 
@@ -51,7 +59,7 @@ Global Variables:   NA
     const constraints = {
         audio: false,
         video: {
-            width: 400, height: 400
+            width: 500, height: 500
         }
     };
 
@@ -86,8 +94,8 @@ Global Variables:   NA
     var myHeight = [];
     var flag = false;
     setInterval(function () {
-        context.drawImage(video, 0, 0, 400, 400);
-        fake_context.drawImage(video, 0, 0, 400, 400);
+        context.drawImage(video, 0, 0, 500, 500);
+        fake_context.drawImage(video, 0, 0, 500, 500);
 
         if (polygon.length != 0) {
             context.beginPath();
@@ -167,13 +175,15 @@ Global Variables:   NA
             // }
         });
     }
-    const myBtn = document.getElementById('btn');
-    myBtn.addEventListener('click', function(){
+    const start_btn = document.getElementById('start_btn');
+    start_btn.addEventListener('click', function(){
         flag = true;
+        document.getElementById('bdv').style.visibility = 'hidden';
     });
-    const mybtn1 = document.getElementById('btn1');
-    mybtn1.addEventListener('click', function(){
+    const end_btn = document.getElementById('end_btn');
+    end_btn.addEventListener('click', function(){
         flag = false;
+        document.getElementById('sd').style.visibility = 'hidden';
     });
 </script>
 {% endblock %}

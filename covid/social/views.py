@@ -18,6 +18,7 @@ from django.core.files import File
 from django.conf import settings
 import numpy as np
 import cv2
+from queue import Queue
 from scipy.spatial import distance as dist
 import imutils
 import os
@@ -26,6 +27,8 @@ from account.models import Previous_Social
 import pytz
 from ipstack import GeoLookup
 import csv
+from imutils.video import FPS
+from threading import Thread
 import xlwt
 from .models import Video
 from django.views.decorators.csrf import csrf_exempt
@@ -39,6 +42,41 @@ global location
 geo_lookup = GeoLookup('776da34f4f37c2fb8f3ad306cc615bff')
 location = geo_lookup.get_own_location()
 location = location['city'] + ', ' + location['region_name'] + ', ' + location['country_name']
+
+
+
+class MultithreadedVideoStream:
+    def __init__(self, path, queuesize=1024):
+        self.stream = cv2.VideoCapture(path)
+        self.stopped = False
+        self.Q = Queue(maxsize=queuesize)
+
+    def start(self):
+        t = Thread(target=self.update, args=())
+        t.daemon = True
+        t.start()
+        return self
+
+    def update(self):
+        while True:
+            if self.stopped:
+                return
+            if not self.Q.full():
+                grabbed, frame = self.stream.read()
+                if not grabbed:
+                    self.stop()
+                    return
+                self.Q.put(frame)
+
+    def read(self):
+        return self.Q.get()
+
+    def more(self):
+        return self.Q.qsize() > 0
+
+    def stop(self):
+        self.stopped = True
+
 
 
 # Function Name:	previous_results_view
@@ -61,7 +99,6 @@ mouse_pts = []
 mouse_pts_video = []
 points = []
 mapping = {}
-violate = set()
 centroids = []
 
 # Loading the YOLO object detector
@@ -262,6 +299,7 @@ def get_mouse_points(event, x, y, flags, param):
 #                   of violations on the copied image. Return the image.
 # Example Call:		get_social_distancing_view_video(frame, results, copied_frame, threshold_distance, sd_output_video, matrix)
 def get_social_distancing_view(image, results, threshold_distance, matrix):
+    violate = set()
     for (i, (prob, bbox, centroid)) in enumerate(results):
         (startX, startY, endX, endY) = bbox
         (cX, cY) = centroid
@@ -294,7 +332,7 @@ def get_social_distancing_view(image, results, threshold_distance, matrix):
 
     text = "Social Distancing Violations: {}".format(len(violate))
     cv2.putText(copied_image, text, (10, 25), cv2.FONT_HERSHEY_COMPLEX, 0.85, (0, 0, 255), 3)
-    return copied_image
+    return copied_image, violate
 
 
 # Function Name:	order_points
@@ -390,7 +428,7 @@ def get_social_distancing_view_video(frame, results, copied_frame, threshold_dis
         cv2.rectangle(copied_frame, (startX, startY), (endX, endY), color, 2)
     
     text = "Social Distancing Violations: {}".format(len(violate))
-    cv2.putText(copied_frame, text, (10, 25), cv2.FONT_HERSHEY_COMPLEX, 0.85, (0, 0, 255), 3)
+    cv2.putText(copied_frame, text, (25, 25), cv2.FONT_HERSHEY_COMPLEX, 0.85, (0, 0, 255), 3)
     sd_output_video.write(copied_frame)
     
 
@@ -498,7 +536,7 @@ def image_view(request):
         ordered_points = order_points(mouse_pts[0:4])
         matrix, warped = four_point_transform(image, ordered_points)
 
-        sd_view = get_social_distancing_view(image, results, threshold_distance, matrix)
+        sd_view, violate = get_social_distancing_view(image, results, threshold_distance, matrix)
         bdv = get_birds_eye_view(warped, mapping) 
 
         uri1 = b64encode(cv2.imencode('.jpg', sd_view)[1]).decode()
@@ -550,6 +588,8 @@ def video_view(request):
         v.save()
 
         v = Video.objects.last()
+        # time.sleep(1.0)
+        myfps = FPS().start()
         video = cv2.VideoCapture(v.video.path)
         fourcc = cv2.VideoWriter_fourcc(*'mp4v')
         fps = int(video.get(cv2.CAP_PROP_FPS))
@@ -557,6 +597,8 @@ def video_view(request):
         height = int(video.get(cv2.CAP_PROP_FRAME_HEIGHT))
         sd_video_output = cv2.VideoWriter(settings.MEDIA_ROOT+'/sd_output_video.mp4',fourcc, fps, (width, height))
         bdv_video_output = cv2.VideoWriter(settings.MEDIA_ROOT+'/bdv_output_video.mp4',fourcc, fps, (width, height))
+
+        mvs = MultithreadedVideoStream(v.video.path).start()
 
         labelsPath = settings.BASE_DIR+'/models/coco.names'
         LABELS = open(labelsPath).read().strip().split("\n")
@@ -568,10 +610,8 @@ def video_view(request):
 
         cropping = True
         global frame
-        while True:
-            grabbed, frame = video.read()
-            if not grabbed:
-                break
+        while mvs.more():
+            frame = mvs.read()
             copied_frame = frame.copy()
             if cropping:
                 get_boundary_points_video(frame)
@@ -584,6 +624,11 @@ def video_view(request):
             if len(results) >= 2:
                 get_social_distancing_view_video(frame, results, copied_frame, threshold_distance, sd_video_output, matrix)
                 get_birds_eye_view_video(warped, mapping, bdv_video_output)
+            myfps.update()
+        myfps.stop()
+        print("[INFO] elasped time: {:.2f}".format(myfps.elapsed()))
+        print("[INFO] approx. FPS: {:.2f}".format(myfps.fps()))
+        
         
         return render(request, 'social/video_output.html')
 
@@ -643,8 +688,7 @@ def webcam_view(request):
 
         ordered_points = order_points(mouse_pts[0:4])
         matrix, warped = four_point_transform(image, ordered_points)
-
-        sd_view = get_social_distancing_view(image, results, threshold_distance, matrix)
+        sd_view, violate = get_social_distancing_view(image, results, threshold_distance, matrix)
         bdv = get_birds_eye_view(warped, mapping) 
 
         uri1 = b64encode(cv2.imencode('.jpg', sd_view)[1]).decode()
